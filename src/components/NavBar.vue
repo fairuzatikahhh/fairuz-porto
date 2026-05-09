@@ -67,10 +67,15 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { Icon } from '@iconify/vue'
 
+const route = useRoute()
+const router = useRouter()
+
+// Initialize active state based on current route
+const active = ref(route.path.startsWith('/project') ? 'work' : 'home')
 const mobileOpen = ref(false)
-const active = ref('home')
 
 const navItems = [
   { id: 'home', label: 'Home', href: '#home', icon: 'solar:home-2-linear' },
@@ -80,11 +85,20 @@ const navItems = [
 ]
 
 function scrollTo(href) {
-  const el = document.querySelector(href)
-  if (el) el.scrollIntoView({ behavior: 'smooth' })
+  if (route.path !== '/') {
+    // If not on home page, navigate to home with hash
+    router.push('/' + href)
+  } else {
+    // If on home page, scroll smoothly
+    const el = document.querySelector(href)
+    if (el) el.scrollIntoView({ behavior: 'smooth' })
+  }
 }
 
 function onScroll() {
+  // Only track scroll sections on home page
+  if (route.path !== '/') return
+
   const sections = ['home', 'about', 'work', 'contact']
   for (const id of sections) {
     const el = document.getElementById(id)

@@ -4,9 +4,12 @@
     <!-- Header -->
     <div class="text-center mb-12 px-6">
       <h2 class="text-white font-normal" style="font-size:clamp(28px,4vw,52px);line-height:1.2;">
+  {{ title }}
+</h2>
+      <!-- <h2 class="text-white font-normal" style="font-size:clamp(28px,4vw,52px);line-height:1.2;">
         Thoughtfully crafted interfaces built for<br class="hidden sm:block" />
         real users and real workflows.
-      </h2>
+      </h2> -->
     </div>
 
     <!-- Filter tabs: Hapus ukuran fixed w-[171px] h-[56px], ganti ke padding yang responsif -->
@@ -41,7 +44,7 @@
         <div
           v-for="(project, i) in projects"
           :key="project.name"
-          @click="activeIndex = i"
+          @click="handleProjectClick(i, project)"
           class="flex-shrink-0 flex flex-col overflow-hidden cursor-pointer transition-all duration-500"
           :style="{
             width: cardWidth + 'px',
@@ -96,6 +99,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue' // Tambahkan onMounted & onUnmounted
+import { useRouter } from 'vue-router'
 import { Icon } from '@iconify/vue'
 import rayspeedImg from '../assets/reyspeed.svg'
 import buckstoreImg from '../assets/buckstore.svg'
@@ -106,6 +110,19 @@ import anomanImg from '../assets/anoman.svg'
 const activeTab = ref('UI Design')
 const activeIndex = ref(1)
 const gap = 24
+const router = useRouter()
+
+const handleProjectClick = (index, project) => {
+  if (activeIndex.value === index) {
+    if (project.name === 'Rayspeed Asia') {
+      router.push('/project/rayspeed')
+    } else if (project.name === 'Nashir') {
+      router.push('/project/nashir')
+    }
+  } else {
+    activeIndex.value = index
+  }
+}
 
 // UBAH: Jadikan cardWidth reaktif
 const cardWidth = ref(480)
@@ -176,6 +193,14 @@ function endTouch(e) {
     activeIndex.value--
   }
 }
+
+// Di script setup ProjectsSection.vue
+const props = defineProps({
+  title: {
+    type: String,
+    default: 'Thoughtfully crafted interfaces built for real users and real workflows.'
+  }
+})
 
 const tabs = ['Printout Design', 'UI Design', 'Logo']
 
