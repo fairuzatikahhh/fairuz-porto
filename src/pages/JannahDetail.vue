@@ -52,7 +52,7 @@ const processCards =
      :process-cards="processCards"
      :challenge-text="'Designing for Hajj presented a unique challenge, as the flow involves a series of rituals and sequences that are not commonly experienced firsthand. Without direct personal experience, it required deeper research and careful interpretation to accurately translate the journey into a clear and structured digital experience that users can easily follow.'"
      :result-title="'The Result'"
-     :result-description="'A more structured and guided digital experience that supports both daily worship and the Hajj journey, making complex processes easier to understand and follow.'"
+     :result-text="'A more structured and guided digital experience that supports both daily worship and the Hajj journey, making complex processes easier to understand and follow.'"
      :result-image="resultImage"
     ></DetailProject>
 

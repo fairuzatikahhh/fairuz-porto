@@ -52,7 +52,7 @@ const processCards =
      :process-cards="processCards"
      :challenge-text="'Designing a logistics product from scratch meant translating a complex shipping process into something users could understand and navigate with ease. The challenge was to create an experience that felt structured, intuitive, and reliable across multiple touchpoints.'"
      :result-title="'The Result'"
-     :result-description="'The product delivers a clearer and more structured logistics experience, with simplified flows and a scalable UI foundation that improves usability and supports future growth.'"
+     :result-text="'The product delivers a clearer and more structured logistics experience, with simplified flows and a scalable UI foundation that improves usability and supports future growth.'"
      :result-image="resultImage"
     ></DetailProject>
 

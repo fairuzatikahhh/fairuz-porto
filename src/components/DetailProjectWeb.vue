@@ -50,6 +50,10 @@
 
   <!-- Mobile -->
   <div class="flex flex-col gap-3 w-full md:hidden px-4">
+    <!-- Center Image (mobile, smaller) -->
+    <div class="flex justify-center mb-4">
+      <img :src="goalsCenterImage" class="w-full max-w-[200px] h-auto rounded-[24px] object-cover" />
+    </div>
     <div v-for="(goal, i) in goals" :key="i"
       class="bg-white/5 backdrop-blur-md p-3 pr-5 rounded-[16px] border border-white/10 shadow-2xl flex flex-row items-center gap-3">
       <div class="bg-white/10 shrink-0 w-10 h-10 rounded-[16px] flex items-center justify-center text-white/90 border border-white/5">
