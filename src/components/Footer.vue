@@ -16,9 +16,9 @@
 
 <script setup>
 const socials = [
-  { name: 'linkedin', icon: '/src/assets/linkedin.svg', link: 'https://www.linkedin.com/in/fairuzatikah/' },
-  { name: 'dribbble', icon: '/src/assets/dribbble.svg', link: 'https://dribbble.com/fairuz_atikah' },
-  { name: 'upwork', icon: '/src/assets/upwork.svg', link: 'https://www.upwork.com/freelancers/~013c299f81c267a6ae' },
-  { name: 'instagram', icon: '/src/assets/instagram.svg', link: 'https://www.instagram.com/ur.dsgnr/' },
+  { name: 'linkedin', icon: '@/assets/linkedin.svg', link: 'https://www.linkedin.com/in/fairuzatikah/' },
+  { name: 'dribbble', icon: '@/assets/dribbble.svg', link: 'https://dribbble.com/fairuz_atikah' },
+  { name: 'upwork', icon: '@/assets/upwork.svg', link: 'https://www.upwork.com/freelancers/~013c299f81c267a6ae' },
+  { name: 'instagram', icon: '@/assets/instagram.svg', link: 'https://www.instagram.com/ur.dsgnr/' },
 ]
 </script>
