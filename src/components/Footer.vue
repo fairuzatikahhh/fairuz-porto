@@ -15,15 +15,11 @@
 </template>
 
 <script setup>
-import linkedinIcon from '@/assets/linkedin.svg'
-import dribbbleIcon from '@/assets/dribbble.svg'
-import upworkIcon from '@/assets/upwork.svg'
-import instagramIcon from '@/assets/instagram.svg'
 
 const socials = [
-  { name: 'linkedin', icon: linkedinIcon, link: 'https://www.linkedin.com/in/fairuzatikah/' },
-  { name: 'dribbble', icon: dribbbleIcon, link: 'https://dribbble.com/fairuz_atikah' },
-  { name: 'upwork', icon: upworkIcon, link: 'https://www.upwork.com/freelancers/~013c299f81c267a6ae' },
-  { name: 'instagram', icon: instagramIcon, link: 'https://www.instagram.com/ur.dsgnr/' },
+  { name: 'linkedin', icon: '/linkedin.svg', link: 'https://www.linkedin.com/in/fairuzatikah/' },
+  { name: 'dribbble', icon: '/dribbble.svg', link: 'https://dribbble.com/fairuz_atikah' },
+  { name: 'upwork', icon: '/upwork.svg', link: 'https://www.upwork.com/freelancers/~013c299f81c267a6ae' },
+  { name: 'instagram', icon: '/instagram.svg', link: 'https://www.instagram.com/ur.dsgnr/' },
 ]
 </script>
