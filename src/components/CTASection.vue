@@ -10,7 +10,7 @@
         <p class="text-[#8F8F8F] text-lg md:text-xl max-w-xl">
           I'm always open to discussing product design work or partnership opportunities.
         </p>
-        <button class="mt-4 px-8 py-4 bg-white text-black rounded-full font-medium text-lg hover:scale-105 transition-transform flex items-center gap-2">
+        <button class="mt-4 px-8 py-4 text-white rounded-full font-medium text-lg hover:scale-105 transition-transform flex items-center gap-2" style="background:#E966A0;">
           Say Hello <Icon icon="solar:arrow-right-up-linear" />
         </button>
       </div>
