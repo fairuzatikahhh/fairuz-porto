@@ -1,19 +1,15 @@
 <template>
   <section id="work" class="py-16 overflow-hidden" style="border-top:1px solid #2A2A2A;">
-    
+
     <!-- Header -->
     <div class="text-center mb-12 px-6">
       <h2 class="text-white font-normal" style="font-size:clamp(28px,4vw,52px);line-height:1.2;">
-  {{ title }}
-</h2>
-      <!-- <h2 class="text-white font-normal" style="font-size:clamp(28px,4vw,52px);line-height:1.2;">
-        Thoughtfully crafted interfaces built for<br class="hidden sm:block" />
-        real users and real workflows.
-      </h2> -->
+        {{ title }}
+      </h2>
     </div>
 
-    <!-- Filter tabs: Hapus ukuran fixed w-[171px] h-[56px], ganti ke padding yang responsif -->
-    <div class="flex gap-3 flex-wrap justify-center mb-8 px-6">
+    <!-- Filter tabs -->
+    <div class="hidden flex gap-3 flex-wrap justify-center mb-8 px-6">
       <button v-for="tab in tabs" :key="tab"
         @click="activeTab = tab"
         class="px-6 py-2.5 rounded-full text-sm md:text-md font-medium transition-all"
@@ -24,7 +20,7 @@
       </button>
     </div>
 
-    <!-- Carousel with center focus effect -->
+    <!-- Carousel -->
     <div class="relative w-full" style="height:580px;cursor:grab;"
       @mousedown="startDrag"
       @mousemove="onDrag"
@@ -35,10 +31,12 @@
       @touchend="endTouch"
     >
       <div
-        class="flex items-center transition-transform duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]"
+        class="flex items-center"
         :style="{
-          transform: `translateX(calc(50% - ${activeIndex * (cardWidth + gap)}px - ${cardWidth / 2}px))`,
+          transform: `translateX(calc(50% - ${activeIndex * (cardWidth + gap)}px - ${cardWidth / 2}px + ${dragOffset}px))`,
           gap: gap + 'px',
+          transition: isDragging ? 'none' : 'transform 0.5s cubic-bezier(0.4,0,0.2,1)',
+          userSelect: 'none',
         }"
       >
         <div
@@ -68,7 +66,6 @@
             <h3 class="font-semibold" :class="i === activeIndex ? 'text-white text-lg md:text-xl' : 'text-white/50 text-base'">
               {{ project.name }}
             </h3>
-            <!-- Line clamp untuk membatasi deskripsi di HP agar tingginya rapi -->
             <p class="text-xs md:text-sm leading-relaxed line-clamp-2 md:line-clamp-none" :class="i === activeIndex ? 'text-white/70' : 'text-white/30'">
               {{ project.description }}
             </p>
@@ -94,107 +91,111 @@
           ? 'width:24px;height:8px;background:#E8417B;'
           : 'width:8px;height:8px;background:rgba(255,255,255,0.2);'" />
     </div>
+
   </section>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue' // Tambahkan onMounted & onUnmounted
-import { useRouter } from 'vue-router'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { Icon } from '@iconify/vue'
 import rayspeedImg from '../assets/reyspeed.svg'
 import buckstoreImg from '../assets/buckstore.svg'
 import nashirImg from '../assets/nashir.svg'
 import comproImg from '../assets/compro.svg'
-import anomanImg from '../assets/anoman.svg'
+import jannahImg from '../assets/jannah-overview.png'
 
 const activeTab = ref('UI Design')
-const activeIndex = ref(1)
-const gap = 24
+const route = useRoute()
 const router = useRouter()
+const hasDragged = ref(false)
+
+const getInitialIndex = () => {
+  const path = route.path
+  if (path === '/project/buckstore') return 1  // Rayspeed Asia
+  if (path === '/project/rayspeed') return 2   // Nashir
+  if (path === '/project/nashir') return 3     // Company Profile Tries
+  if (path === '/project/tries') return 4      // Jannah
+  if (path === '/project/jannah') return 0     // Buckstore
+  return 2                                      // Home → Nashir
+}
+
+const activeIndex = ref(getInitialIndex())
+const gap = 24
 
 const handleProjectClick = (index, project) => {
+  if (hasDragged.value) return
   if (activeIndex.value === index) {
-    if (project.name === 'Rayspeed Asia') {
-      router.push('/project/rayspeed')
-    } else if (project.name === 'Nashir') {
-      router.push('/project/nashir')
-    }
+    if (project.name === 'Rayspeed Asia') router.push('/project/rayspeed')
+    else if (project.name === 'Nashir') router.push('/project/nashir')
+    else if (project.name === 'Company Profile Tries') router.push('/project/tries')
+    else if (project.name === 'Buckstore') router.push('/project/buckstore')
+    else if (project.name === 'Jannah') router.push('/project/jannah')
   } else {
     activeIndex.value = index
   }
 }
 
-// UBAH: Jadikan cardWidth reaktif
 const cardWidth = ref(480)
-
-// FUNGSI BARU: Untuk mengatur ukuran kartu berdasarkan layar
 const updateCardWidth = () => {
-  if (window.innerWidth < 640) {
-    // Layar HP: Lebar layar dikurangi padding 48px
-    cardWidth.value = window.innerWidth - 48
-  } else if (window.innerWidth < 1024) {
-    // Layar Tablet
-    cardWidth.value = 400
-  } else {
-    // Layar Desktop
-    cardWidth.value = 480
-  }
+  if (window.innerWidth < 640) cardWidth.value = window.innerWidth - 48
+  else if (window.innerWidth < 1024) cardWidth.value = 400
+  else cardWidth.value = 480
 }
+onMounted(() => { updateCardWidth(); window.addEventListener('resize', updateCardWidth) })
+onUnmounted(() => { window.removeEventListener('resize', updateCardWidth) })
 
-// Pantau perubahan ukuran layar
-onMounted(() => {
-  updateCardWidth()
-  window.addEventListener('resize', updateCardWidth)
-})
-
-onUnmounted(() => {
-  window.removeEventListener('resize', updateCardWidth)
-})
-
-// Drag/swipe state
+// Drag state
 const isDragging = ref(false)
 const dragStartX = ref(0)
+const dragCurrentX = ref(0)
 const dragThreshold = 50
 
-// Mouse drag
+const dragOffset = computed(() =>
+  isDragging.value ? dragCurrentX.value - dragStartX.value : 0
+)
+
 function startDrag(e) {
   isDragging.value = true
+  hasDragged.value = false
   dragStartX.value = e.clientX
+  dragCurrentX.value = e.clientX
 }
 function onDrag(e) {
   if (!isDragging.value) return
-  e.preventDefault()
+  dragCurrentX.value = e.clientX
+  if (Math.abs(dragCurrentX.value - dragStartX.value) > 5) hasDragged.value = true
 }
 function endDrag(e) {
   if (!isDragging.value) return
   isDragging.value = false
-  const diff = dragStartX.value - e.clientX
-  if (diff > dragThreshold && activeIndex.value < projects.length - 1) {
-    activeIndex.value++
-  } else if (diff < -dragThreshold && activeIndex.value > 0) {
-    activeIndex.value--
-  }
+  const diff = dragStartX.value - dragCurrentX.value
+  if (diff > dragThreshold && activeIndex.value < projects.length - 1) activeIndex.value++
+  else if (diff < -dragThreshold && activeIndex.value > 0) activeIndex.value--
+  dragCurrentX.value = dragStartX.value
+  setTimeout(() => { hasDragged.value = false }, 100)
 }
 
-// Touch swipe
 function startTouch(e) {
+  isDragging.value = true
+  hasDragged.value = false
   dragStartX.value = e.touches[0].clientX
+  dragCurrentX.value = e.touches[0].clientX
 }
 function onTouch(e) {
-  // Hanya prevent default jika gesernya horizontal agar tidak mengganggu scroll vertikal HP
-  const touchY = e.touches[0].clientY
-  // e.preventDefault() -> Dihapus sementara atau disesuaikan
+  if (!isDragging.value) return
+  dragCurrentX.value = e.touches[0].clientX
+  if (Math.abs(dragCurrentX.value - dragStartX.value) > 5) hasDragged.value = true
 }
 function endTouch(e) {
+  isDragging.value = false
   const diff = dragStartX.value - e.changedTouches[0].clientX
-  if (diff > dragThreshold && activeIndex.value < projects.length - 1) {
-    activeIndex.value++
-  } else if (diff < -dragThreshold && activeIndex.value > 0) {
-    activeIndex.value--
-  }
+  if (diff > dragThreshold && activeIndex.value < projects.length - 1) activeIndex.value++
+  else if (diff < -dragThreshold && activeIndex.value > 0) activeIndex.value--
+  dragCurrentX.value = dragStartX.value
+  setTimeout(() => { hasDragged.value = false }, 100)
 }
 
-// Di script setup ProjectsSection.vue
 const props = defineProps({
   title: {
     type: String,
@@ -230,9 +231,9 @@ const projects = [
     tags: ['Website'],
   },
   {
-    name: 'Anoman',
-    img: anomanImg,
-    description: 'A mobile dashboard product designed for clarity and intuitive user interaction.',
+    name: 'Jannah',
+    img: jannahImg,
+    description: 'A mobile app designed to support daily worship and guide users through structured Hajj journeys.',
     tags: ['Mobile'],
   },
 ]
