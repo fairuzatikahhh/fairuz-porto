@@ -34,6 +34,9 @@ export interface EyeBox {
 }
 
 export const EYE_CONFIG = {
+  // Target iris diameter ratio to eye-opening width (0.52 - 0.55)
+  irisToEyeWidth: 0.58,
+
   leftEye: {
     left: 34.972,
     top: 29.917,
@@ -50,11 +53,13 @@ export const EYE_CONFIG = {
     maskUrl: '/assets/right-eye-mask.png',
   } as EyeBox,
 
-  // Shared iris tuning (matches reference: diameter ~55% of eye-opening width)
+  // Shared iris tuning:
+  // - noseOffsetPercent: 10% toward nose symmetrically
+  // - verticalOffsetPercent: shifted down so iris bottom is clipped by lower lid (~5-8% of eye height)
+  //   and top tucked under upper lid
   iris: {
-    sizePercent: 55,       // % of eye-opening width
-    noseOffsetPercent: 10, // % of eye width shifted toward nose from center
-    verticalOffsetPercent: 5, // % shifted down so bottom touches lower lid & top is tucked under upper lid
+    noseOffsetPercent: 10,
+    verticalOffsetPercent: 9.5,
   },
 
   movement: {
@@ -64,7 +69,7 @@ export const EYE_CONFIG = {
 
   parallax: {
     maxTranslate: 4, // max head parallax translate (px)
-    maxRotate: 1.2,  // max head parallax rotation (deg)
+    maxRotate: 1.2,  // max head parallax rotate (deg)
   },
 };
 

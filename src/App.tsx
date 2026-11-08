@@ -6,6 +6,10 @@ import { THEME } from './config';
 const LOADER_VISITED_KEY = 'portfolio_loader_visited';
 
 function shouldShowLoader(): boolean {
+  if (typeof window !== 'undefined') {
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('eyeTest') || params.get('debug') === '1' || params.has('noLoader')) return false;
+  }
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return false;
   if (sessionStorage.getItem(LOADER_VISITED_KEY)) return false;
   return true;

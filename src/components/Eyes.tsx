@@ -15,8 +15,8 @@ export default function Eyes({ containerRef }: EyesProps) {
     rightEye: { ...EYE_CONFIG.rightEye },
   });
 
+  const [irisRatio, setIrisRatio] = useState(EYE_CONFIG.irisToEyeWidth);
   const [irisTuning, setIrisTuning] = useState({
-    sizePercent: EYE_CONFIG.iris.sizePercent,
     noseOffsetPercent: EYE_CONFIG.iris.noseOffsetPercent,
     verticalOffsetPercent: EYE_CONFIG.iris.verticalOffsetPercent,
   });
@@ -167,17 +167,17 @@ export default function Eyes({ containerRef }: EyesProps) {
     };
   }, [debugMode, containerRef]);
 
-  // In eyes.png the colored iris occupies 79% of the square bounding box.
-  // To make the visible iris diameter = sizePercent of eye width:
-  const imgWidthPercent = irisTuning.sizePercent / 0.79;
+  // Iris diameter = irisRatio x eye-opening width (eyes.png is tightly cropped 1:1 to circular iris)
+  const irisWidthPercent = irisRatio * 100;
 
   const renderEye = (
     eyeKey: 'leftEye' | 'rightEye',
     box: EyeBox,
     irisRef: React.RefObject<HTMLImageElement | null>
   ) => {
-    // For left eye (viewer left), nose is to the right (+offset)
-    // For right eye (viewer right), nose is to the left (-offset)
+    // Symmetrical 10% shift toward nose:
+    // Left eye (viewer left): nose is to the right (+10%)
+    // Right eye (viewer right): nose is to the left (-10%)
     const isLeft = eyeKey === 'leftEye';
     const restX = isLeft
       ? 50 + irisTuning.noseOffsetPercent
@@ -197,7 +197,7 @@ export default function Eyes({ containerRef }: EyesProps) {
           pointerEvents: debugMode ? 'auto' : 'none',
         }}
       >
-        {/* Real Eye-Opening Mask Layer: clips the iris and shadow to the exact eyelid curves */}
+        {/* Real Eye-Opening Mask Layer: clips the iris and shadow strictly to the 3D eyelid lines */}
         <div
           style={{
             position: 'absolute',
@@ -214,7 +214,7 @@ export default function Eyes({ containerRef }: EyesProps) {
             border: debugMode ? '1px dashed #DC6341' : 'none',
           }}
         >
-          {/* Iris Element: larger diameter (~55% of eye width), tucked under upper lid, touching lower lid */}
+          {/* Iris Element: diameter = 0.55 x eye-opening width */}
           <img
             ref={irisRef}
             src="/assets/eyes.png"
@@ -223,7 +223,7 @@ export default function Eyes({ containerRef }: EyesProps) {
               position: 'absolute',
               left: `${restX}%`,
               top: `${restY}%`,
-              width: `${imgWidthPercent}%`,
+              width: `${irisWidthPercent}%`,
               aspectRatio: '1 / 1',
               objectFit: 'contain',
               pointerEvents: 'none',
@@ -289,7 +289,7 @@ export default function Eyes({ containerRef }: EyesProps) {
             color: '#212121',
             fontFamily: 'monospace',
             fontSize: '0.8rem',
-            width: '320px',
+            width: '330px',
             boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
             backdropFilter: 'blur(8px)',
           }}
@@ -306,25 +306,23 @@ export default function Eyes({ containerRef }: EyesProps) {
 
           <div style={{ marginBottom: '0.75rem' }}>
             <label style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem' }}>
-              <span>Shared Iris Size:</span>
-              <b>{irisTuning.sizePercent}%</b>
+              <span>Iris / Eye Width Ratio:</span>
+              <b>{irisRatio.toFixed(2)}</b>
             </label>
             <input
               type="range"
-              min="40"
-              max="70"
-              step="1"
-              value={irisTuning.sizePercent}
-              onChange={(e) =>
-                setIrisTuning((p) => ({ ...p, sizePercent: parseFloat(e.target.value) }))
-              }
+              min="0.40"
+              max="0.70"
+              step="0.01"
+              value={irisRatio}
+              onChange={(e) => setIrisRatio(parseFloat(e.target.value))}
               style={{ width: '100%' }}
             />
           </div>
 
           <div style={{ marginBottom: '0.75rem' }}>
             <label style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem' }}>
-              <span>Nose Offset (Convergence):</span>
+              <span>Symmetric Nose Offset:</span>
               <b>{irisTuning.noseOffsetPercent}%</b>
             </label>
             <input
@@ -368,12 +366,12 @@ export default function Eyes({ containerRef }: EyesProps) {
               fontSize: '0.72rem',
             }}
           >
-            {JSON.stringify({ ...boxes, iris: irisTuning }, null, 2)}
+            {JSON.stringify({ irisToEyeWidth: irisRatio, ...boxes, iris: irisTuning }, null, 2)}
           </pre>
 
           <button
             onClick={() => {
-              const fullConfig = { ...boxes, iris: irisTuning };
+              const fullConfig = { irisToEyeWidth: irisRatio, ...boxes, iris: irisTuning };
               console.log('FINAL EYE_CONFIG:\n', JSON.stringify(fullConfig, null, 2));
               navigator.clipboard?.writeText(JSON.stringify(fullConfig, null, 2));
               alert('Config logged to console and copied to clipboard!');
