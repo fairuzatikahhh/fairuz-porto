@@ -9,6 +9,13 @@ import {
 } from '../config';
 import { preloadAssets } from '../preload';
 
+const CURVE_VH = 12;
+
+function announceLoaderExit() {
+  document.documentElement.dataset.loader = 'done';
+  window.dispatchEvent(new Event('loader:exit'));
+}
+
 interface LoaderProps {
   onDone: () => void;
 }
@@ -51,16 +58,21 @@ export default function Loader({ onDone }: LoaderProps) {
         if (percentRef.current) {
           percentRef.current.textContent = '100%';
         }
-        // Hold at 100% for HOLD_DURATION, then fade overlay out (opacity only)
+        // Hold at 100% for HOLD_DURATION, then curtain slide-up
         gsap.delayedCall(HOLD_DURATION, () => {
-          if (overlayRef.current) {
-            gsap.to(overlayRef.current, {
-              opacity: 0,
-              duration: 0.8,
-              ease: 'power2.inOut',
+          const overlay = overlayRef.current;
+          if (overlay) {
+            overlay.style.pointerEvents = 'none';
+            announceLoaderExit();
+            gsap.to(overlay, {
+              yPercent: -100,
+              y: () => -window.innerHeight * (CURVE_VH / 100 + 0.01),
+              duration: 1.1,
+              ease: 'power4.inOut',
               onComplete: onDone,
             });
           } else {
+            announceLoaderExit();
             onDone();
           }
         });
@@ -107,6 +119,7 @@ export default function Loader({ onDone }: LoaderProps) {
 
   useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      announceLoaderExit();
       onDone();
       return;
     }
@@ -189,8 +202,8 @@ export default function Loader({ onDone }: LoaderProps) {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        overflow: 'hidden',
         pointerEvents: 'auto',
+        willChange: 'transform',
       }}
     >
       {/* Video: Centered, muted, playsInline, preload="auto", plays once and holds last frame */}
@@ -282,6 +295,24 @@ export default function Loader({ onDone }: LoaderProps) {
           Skip
         </button>
       )}
+
+      {/* Curved bottom edge */}
+      <svg
+        aria-hidden="true"
+        viewBox="0 0 100 100"
+        preserveAspectRatio="none"
+        style={{
+          position: 'absolute',
+          left: 0,
+          top: 'calc(100% - 1px)',
+          width: '100%',
+          height: `${CURVE_VH}vh`,
+          display: 'block',
+          pointerEvents: 'none',
+        }}
+      >
+        <path d="M0 0 H100 Q50 100 0 0 Z" fill={THEME.pageBg} />
+      </svg>
     </div>
   );
 }

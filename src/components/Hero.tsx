@@ -1,9 +1,10 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 import gsap from 'gsap';
 import Eyes from './Eyes';
 import { EYE_CONFIG, THEME } from '../config';
 
 export default function Hero() {
+  const rootRef = useRef<HTMLDivElement>(null);
   const bustRef = useRef<HTMLDivElement>(null);
 
   // Subtle head parallax on base.png (max 4px translate, 1.2deg rotate)
@@ -55,8 +56,70 @@ export default function Hero() {
     };
   }, []);
 
+  useLayoutEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      return;
+    }
+
+    let handleLoaderExit: (() => void) | null = null;
+
+    const ctx = gsap.context(() => {
+      const tl = gsap.timeline({ paused: true, delay: 0.3 });
+
+      tl.fromTo(
+        '[data-reveal="character"]',
+        { yPercent: 16, opacity: 0 },
+        { yPercent: 0, opacity: 1, duration: 1.5, ease: 'power4.out' },
+        0
+      )
+        .fromTo(
+          '[data-reveal="line"]',
+          { yPercent: 115 },
+          { yPercent: 0, duration: 1.2, ease: 'power4.out', stagger: 0.12 },
+          0.1
+        )
+        .fromTo(
+          '[data-reveal="desc"]',
+          { y: 40, opacity: 0 },
+          { y: 0, opacity: 1, duration: 1.1, ease: 'power3.out' },
+          0.3
+        )
+        .fromTo(
+          '[data-reveal="header"]',
+          { y: -30, opacity: 0 },
+          { y: 0, opacity: 1, duration: 1, ease: 'power3.out' },
+          0.45
+        );
+
+      handleLoaderExit = () => {
+        tl.play();
+      };
+
+      const isBypassed =
+        document.documentElement.dataset.loader === 'done' ||
+        Boolean(sessionStorage.getItem('portfolio_loader_visited')) ||
+        new URLSearchParams(window.location.search).has('eyeTest') ||
+        new URLSearchParams(window.location.search).get('debug') === '1' ||
+        new URLSearchParams(window.location.search).has('noLoader');
+
+      if (isBypassed) {
+        tl.play();
+      } else {
+        window.addEventListener('loader:exit', handleLoaderExit, { once: true });
+      }
+    }, rootRef);
+
+    return () => {
+      if (handleLoaderExit) {
+        window.removeEventListener('loader:exit', handleLoaderExit);
+      }
+      ctx.revert();
+    };
+  }, []);
+
   return (
     <div
+      ref={rootRef}
       style={{
         position: 'relative',
         width: '100vw',
@@ -69,6 +132,7 @@ export default function Hero() {
     >
       {/* ─── Top Navigation ──────────────────────────────────────────────── */}
       <header
+        data-reveal="header"
         style={{
           position: 'absolute',
           top: '3.2vh',
@@ -194,29 +258,34 @@ export default function Hero() {
         }}
       >
         <div
-          ref={bustRef}
-          style={{
-            position: 'relative',
-            width: '100%',
-            height: '100%',
-            willChange: 'transform',
-          }}
+          data-reveal="character"
+          style={{ position: 'relative', width: '100%', height: '100%' }}
         >
-          {/* Base Character Bust */}
-          <img
-            src="/assets/base.png"
-            alt="Fairuz Atikah bust"
+          <div
+            ref={bustRef}
             style={{
+              position: 'relative',
               width: '100%',
               height: '100%',
-              objectFit: 'contain',
-              display: 'block',
-              pointerEvents: 'none',
+              willChange: 'transform',
             }}
-          />
+          >
+            {/* Base Character Bust */}
+            <img
+              src="/assets/base.png"
+              alt="Fairuz Atikah bust"
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'contain',
+                display: 'block',
+                pointerEvents: 'none',
+              }}
+            />
 
-          {/* Interactive Eyes Overlaid at detected sclera coordinates */}
-          <Eyes containerRef={bustRef} />
+            {/* Interactive Eyes Overlaid at detected sclera coordinates */}
+            <Eyes containerRef={bustRef} />
+          </div>
         </div>
       </div>
 
@@ -242,9 +311,16 @@ export default function Hero() {
             color: THEME.text,
           }}
         >
-          FAIRUZ
-          <br />
-          ATIKAH
+          <span style={{ display: 'block', overflow: 'hidden' }}>
+            <span data-reveal="line" style={{ display: 'block' }}>
+              FAIRUZ
+            </span>
+          </span>
+          <span style={{ display: 'block', overflow: 'hidden' }}>
+            <span data-reveal="line" style={{ display: 'block' }}>
+              ATIKAH
+            </span>
+          </span>
         </h1>
       </div>
 
@@ -261,6 +337,7 @@ export default function Hero() {
         }}
       >
         <p
+          data-reveal="desc"
           style={{
             margin: 0,
             fontFamily: "'Inter', sans-serif",
