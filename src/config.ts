@@ -34,8 +34,8 @@ export interface EyeBox {
 }
 
 export const EYE_CONFIG = {
-  // Target iris diameter ratio to eye-opening width (0.52 - 0.55)
-  irisToEyeWidth: 0.58,
+  // Target iris diameter ratio to eye-opening width (0.52 - 0.55 visual; ~0.65 CSS to fill mask opening)
+  irisToEyeWidth: 0.65,
 
   leftEye: {
     left: 34.972,
@@ -55,11 +55,10 @@ export const EYE_CONFIG = {
 
   // Shared iris tuning:
   // - noseOffsetPercent: 10% toward nose symmetrically
-  // - verticalOffsetPercent: shifted down so iris bottom is clipped by lower lid (~5-8% of eye height)
-  //   and top tucked under upper lid
+  // - verticalOffsetPercent: -1% shifts iris slightly upward, filling both lids (top tucked under upper lid, bottom touching lower lid)
   iris: {
     noseOffsetPercent: 10,
-    verticalOffsetPercent: 9.5,
+    verticalOffsetPercent: -1,
   },
 
   movement: {
