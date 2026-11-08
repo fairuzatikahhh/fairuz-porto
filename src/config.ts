@@ -23,36 +23,43 @@ export const LOADER_COUNTER_STYLES = {
   zIndex: 20,
 };
 
-// ─── Eye Tracking & Parallax Configuration ────────────────────────────────────
-// Programmatically measured from near-white sclera connected components in base.png (1790x2400)
-export interface EyeParams {
-  cx: number;         // Center X (% of base.png width)
-  cy: number;         // Center Y (% of base.png height)
-  maskWidth: number;  // Mask width (% of base.png width)
-  maskHeight: number; // Mask height (% of base.png height)
-  rotate: number;     // Tilt angle in degrees
+// ─── Eye Tracking & Real Mask Configuration ────────────────────────────────────
+// Real eyelid-opening bounds extracted programmatically from base.png (1790x2400)
+export interface EyeBox {
+  left: number;    // % from left of base.png
+  top: number;     // % from top of base.png
+  width: number;   // % of base.png width
+  height: number;  // % of base.png height
+  maskUrl: string; // real eye-opening mask PNG
 }
 
 export const EYE_CONFIG = {
   leftEye: {
-    cx: 39.58,
-    cy: 32.10,
-    maskWidth: 8.04,
-    maskHeight: 4.04,
-    rotate: -3.5,
-  } as EyeParams,
+    left: 34.972,
+    top: 29.917,
+    width: 9.050,
+    height: 4.583,
+    maskUrl: '/assets/left-eye-mask.png',
+  } as EyeBox,
 
   rightEye: {
-    cx: 61.59,
-    cy: 31.88,
-    maskWidth: 8.10,
-    maskHeight: 4.67,
-    rotate: 3.5,
-  } as EyeParams,
+    left: 56.425,
+    top: 29.583,
+    width: 9.553,
+    height: 5.000,
+    maskUrl: '/assets/right-eye-mask.png',
+  } as EyeBox,
+
+  // Shared iris tuning (matches reference: diameter ~55% of eye-opening width)
+  iris: {
+    sizePercent: 55,       // % of eye-opening width
+    noseOffsetPercent: 10, // % of eye width shifted toward nose from center
+    verticalOffsetPercent: 5, // % shifted down so bottom touches lower lid & top is tucked under upper lid
+  },
 
   movement: {
-    maxX: 5.5, // max horizontal iris travel (px)
-    maxY: 3.5, // max vertical iris travel (px)
+    maxX: 4.5, // max horizontal iris travel (px)
+    maxY: 2.8, // max vertical iris travel (px)
   },
 
   parallax: {
@@ -65,6 +72,8 @@ export const EYE_CONFIG = {
 export const PRELOAD_IMAGES: string[] = [
   '/assets/base.png',
   '/assets/eyes.png',
+  '/assets/left-eye-mask.png',
+  '/assets/right-eye-mask.png',
   '/assets/slide-track-clean.png',
 ];
 

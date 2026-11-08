@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import gsap from 'gsap';
-import { EYE_CONFIG, EyeParams } from '../config';
+import { EYE_CONFIG, EyeBox } from '../config';
 
 interface EyesProps {
   containerRef: React.RefObject<HTMLDivElement | null>;
@@ -8,9 +8,17 @@ interface EyesProps {
 
 export default function Eyes({ containerRef }: EyesProps) {
   const [debugMode, setDebugMode] = useState(false);
-  const [config, setConfig] = useState<{ leftEye: EyeParams; rightEye: EyeParams }>({
+
+  // Editable configurations for debug tuning
+  const [boxes, setBoxes] = useState<{ leftEye: EyeBox; rightEye: EyeBox }>({
     leftEye: { ...EYE_CONFIG.leftEye },
     rightEye: { ...EYE_CONFIG.rightEye },
+  });
+
+  const [irisTuning, setIrisTuning] = useState({
+    sizePercent: EYE_CONFIG.iris.sizePercent,
+    noseOffsetPercent: EYE_CONFIG.iris.noseOffsetPercent,
+    verticalOffsetPercent: EYE_CONFIG.iris.verticalOffsetPercent,
   });
 
   const leftIrisRef = useRef<HTMLImageElement>(null);
@@ -36,7 +44,7 @@ export default function Eyes({ containerRef }: EyesProps) {
   useEffect(() => {
     if (!leftIrisRef.current || !rightIrisRef.current) return;
 
-    // Set initial centered rest state (pointer at 0, 0)
+    // Initial centered rest state
     gsap.set([leftIrisRef.current, rightIrisRef.current], {
       xPercent: -50,
       yPercent: -50,
@@ -61,17 +69,17 @@ export default function Eyes({ containerRef }: EyesProps) {
       ease: 'power2.out',
     });
 
-    // Check test parameters (e.g. ?eyeTest=left or ?eyeTest=right)
+    // Check test parameters (e.g. ?eyeTest=left, ?eyeTest=right, ?eyeTest=up, ?eyeTest=down)
     const params = new URLSearchParams(window.location.search);
     const test = params.get('eyeTest');
     if (test === 'left') {
-      gsap.set([leftIrisRef.current, rightIrisRef.current], { x: -EYE_CONFIG.movement.maxX });
-      quickLeftX.current?.(-EYE_CONFIG.movement.maxX);
-      quickRightX.current?.(-EYE_CONFIG.movement.maxX);
+      gsap.set([leftIrisRef.current, rightIrisRef.current], { x: -EYE_CONFIG.movement.maxX, y: 0 });
     } else if (test === 'right') {
-      gsap.set([leftIrisRef.current, rightIrisRef.current], { x: EYE_CONFIG.movement.maxX });
-      quickLeftX.current?.(EYE_CONFIG.movement.maxX);
-      quickRightX.current?.(EYE_CONFIG.movement.maxX);
+      gsap.set([leftIrisRef.current, rightIrisRef.current], { x: EYE_CONFIG.movement.maxX, y: 0 });
+    } else if (test === 'up') {
+      gsap.set([leftIrisRef.current, rightIrisRef.current], { x: 0, y: -EYE_CONFIG.movement.maxY });
+    } else if (test === 'down') {
+      gsap.set([leftIrisRef.current, rightIrisRef.current], { x: 0, y: EYE_CONFIG.movement.maxY });
     }
 
     const handleMouseMove = (e: MouseEvent) => {
@@ -106,32 +114,26 @@ export default function Eyes({ containerRef }: EyesProps) {
     };
   }, []);
 
-  // Debug drag handler
+  // Debug drag handler for moving boxes
   const activeDrag = useRef<{
     eyeKey: 'leftEye' | 'rightEye';
-    action: 'move' | 'resize';
     startX: number;
     startY: number;
-    initialEye: EyeParams;
+    initialBox: EyeBox;
   } | null>(null);
 
   const startDrag = useCallback(
-    (
-      eyeKey: 'leftEye' | 'rightEye',
-      action: 'move' | 'resize',
-      e: React.MouseEvent
-    ) => {
+    (eyeKey: 'leftEye' | 'rightEye', e: React.MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
       activeDrag.current = {
         eyeKey,
-        action,
         startX: e.clientX,
         startY: e.clientY,
-        initialEye: { ...config[eyeKey] },
+        initialBox: { ...boxes[eyeKey] },
       };
     },
-    [config]
+    [boxes]
   );
 
   useEffect(() => {
@@ -140,27 +142,16 @@ export default function Eyes({ containerRef }: EyesProps) {
     const handlePointerMove = (e: MouseEvent) => {
       if (!activeDrag.current || !containerRef.current) return;
       const rect = containerRef.current.getBoundingClientRect();
-      const { eyeKey, action, startX, startY, initialEye } = activeDrag.current;
+      const { eyeKey, startX, startY, initialBox } = activeDrag.current;
 
       const deltaXPct = ((e.clientX - startX) / rect.width) * 100;
       const deltaYPct = ((e.clientY - startY) / rect.height) * 100;
 
-      setConfig((prev) => {
-        const eye = { ...prev[eyeKey] };
-        if (action === 'move') {
-          eye.cx = parseFloat((initialEye.cx + deltaXPct).toFixed(2));
-          eye.cy = parseFloat((initialEye.cy + deltaYPct).toFixed(2));
-        } else if (action === 'resize') {
-          eye.maskWidth = Math.max(1, parseFloat((initialEye.maskWidth + deltaXPct).toFixed(2)));
-          eye.maskHeight = Math.max(0.5, parseFloat((initialEye.maskHeight + deltaYPct).toFixed(2)));
-        }
-
-        const nextConfig = { ...prev, [eyeKey]: eye };
-        console.log(
-          `DEBUG MODE - ${eyeKey} updated:\n` +
-            JSON.stringify(nextConfig, null, 2)
-        );
-        return nextConfig;
+      setBoxes((prev) => {
+        const box = { ...prev[eyeKey] };
+        box.left = parseFloat((initialBox.left + deltaXPct).toFixed(3));
+        box.top = parseFloat((initialBox.top + deltaYPct).toFixed(3));
+        return { ...prev, [eyeKey]: box };
       });
     };
 
@@ -176,51 +167,63 @@ export default function Eyes({ containerRef }: EyesProps) {
     };
   }, [debugMode, containerRef]);
 
+  // In eyes.png the colored iris occupies 79% of the square bounding box.
+  // To make the visible iris diameter = sizePercent of eye width:
+  const imgWidthPercent = irisTuning.sizePercent / 0.79;
+
   const renderEye = (
     eyeKey: 'leftEye' | 'rightEye',
-    eye: EyeParams,
+    box: EyeBox,
     irisRef: React.RefObject<HTMLImageElement | null>
   ) => {
+    // For left eye (viewer left), nose is to the right (+offset)
+    // For right eye (viewer right), nose is to the left (-offset)
+    const isLeft = eyeKey === 'leftEye';
+    const restX = isLeft
+      ? 50 + irisTuning.noseOffsetPercent
+      : 50 - irisTuning.noseOffsetPercent;
+    const restY = 50 + irisTuning.verticalOffsetPercent;
+
     return (
       <div
         key={eyeKey}
         style={{
           position: 'absolute',
-          left: `${eye.cx}%`,
-          top: `${eye.cy}%`,
-          transform: `translate(-50%, -50%) rotate(${eye.rotate || 0}deg)`,
-          width: `${eye.maskWidth}%`,
-          height: `${eye.maskHeight}%`,
-          pointerEvents: debugMode ? 'auto' : 'none',
+          left: `${box.left}%`,
+          top: `${box.top}%`,
+          width: `${box.width}%`,
+          height: `${box.height}%`,
           zIndex: 5,
+          pointerEvents: debugMode ? 'auto' : 'none',
         }}
       >
-        {/* Elliptical Mask matching the sclera eye opening */}
+        {/* Real Eye-Opening Mask Layer: clips the iris and shadow to the exact eyelid curves */}
         <div
           style={{
             position: 'absolute',
             inset: 0,
-            borderRadius: '50%',
             overflow: 'hidden',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            border: debugMode ? '1.5px dashed #DC6341' : 'none',
-            background: debugMode ? 'rgba(220, 99, 65, 0.2)' : 'transparent',
+            WebkitMaskImage: `url('${box.maskUrl}')`,
+            maskImage: `url('${box.maskUrl}')`,
+            WebkitMaskSize: '100% 100%',
+            maskSize: '100% 100%',
+            WebkitMaskRepeat: 'no-repeat',
+            maskRepeat: 'no-repeat',
+            WebkitMaskPosition: 'center',
+            maskPosition: 'center',
+            border: debugMode ? '1px dashed #DC6341' : 'none',
           }}
         >
-          {/* Iris element: size matches the height of the eye white */}
+          {/* Iris Element: larger diameter (~55% of eye width), tucked under upper lid, touching lower lid */}
           <img
             ref={irisRef}
             src="/assets/eyes.png"
             alt={`${eyeKey} iris`}
             style={{
               position: 'absolute',
-              left: '50%',
-              top: '50%',
-              // In eyes.png the colored iris is ~79% of the box, so 126% fills the eye white height
-              height: '126%',
-              width: 'auto',
+              left: `${restX}%`,
+              top: `${restY}%`,
+              width: `${imgWidthPercent}%`,
               aspectRatio: '1 / 1',
               objectFit: 'contain',
               pointerEvents: 'none',
@@ -228,47 +231,39 @@ export default function Eyes({ containerRef }: EyesProps) {
               willChange: 'transform',
             }}
           />
+
+          {/* Soft Eyelid Cast Shadow on the top ~30% of the iris & sclera */}
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              background:
+                'linear-gradient(to bottom, rgba(0, 0, 0, 0.35) 0%, rgba(0, 0, 0, 0.20) 18%, rgba(0, 0, 0, 0.05) 30%, transparent 42%)',
+              pointerEvents: 'none',
+              zIndex: 2,
+            }}
+          />
         </div>
 
-        {/* Debug handles */}
+        {/* Debug drag handle */}
         {debugMode && (
-          <>
-            {/* Center move handle */}
-            <div
-              onMouseDown={(e) => startDrag(eyeKey, 'move', e)}
-              title={`Drag to move ${eyeKey} center`}
-              style={{
-                position: 'absolute',
-                left: '50%',
-                top: '50%',
-                width: 14,
-                height: 14,
-                transform: 'translate(-50%, -50%)',
-                background: '#DC6341',
-                borderRadius: '50%',
-                border: '2px solid #FFFFFF',
-                cursor: 'grab',
-                zIndex: 10,
-              }}
-            />
-            {/* Resize handle */}
-            <div
-              onMouseDown={(e) => startDrag(eyeKey, 'resize', e)}
-              title={`Drag to resize ${eyeKey} mask`}
-              style={{
-                position: 'absolute',
-                right: -4,
-                bottom: -4,
-                width: 10,
-                height: 10,
-                background: '#4ADE80',
-                borderRadius: 2,
-                border: '1.5px solid #FFFFFF',
-                cursor: 'se-resize',
-                zIndex: 10,
-              }}
-            />
-          </>
+          <div
+            onMouseDown={(e) => startDrag(eyeKey, e)}
+            title={`Drag to reposition ${eyeKey}`}
+            style={{
+              position: 'absolute',
+              left: '50%',
+              top: '50%',
+              width: 12,
+              height: 12,
+              transform: 'translate(-50%, -50%)',
+              background: '#DC6341',
+              borderRadius: '50%',
+              border: '2px solid #FFFFFF',
+              cursor: 'grab',
+              zIndex: 10,
+            }}
+          />
         )}
       </div>
     );
@@ -276,8 +271,8 @@ export default function Eyes({ containerRef }: EyesProps) {
 
   return (
     <>
-      {renderEye('leftEye', config.leftEye, leftIrisRef)}
-      {renderEye('rightEye', config.rightEye, rightIrisRef)}
+      {renderEye('leftEye', boxes.leftEye, leftIrisRef)}
+      {renderEye('rightEye', boxes.rightEye, rightIrisRef)}
 
       {/* Debug Mode HUD Panel */}
       {debugMode && (
@@ -294,7 +289,7 @@ export default function Eyes({ containerRef }: EyesProps) {
             color: '#212121',
             fontFamily: 'monospace',
             fontSize: '0.8rem',
-            maxWidth: '340px',
+            width: '320px',
             boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
             backdropFilter: 'blur(8px)',
           }}
@@ -304,37 +299,87 @@ export default function Eyes({ containerRef }: EyesProps) {
               color: '#DC6341',
               fontWeight: 'bold',
               marginBottom: '0.5rem',
-              display: 'flex',
-              justifyContent: 'space-between',
             }}
           >
-            <span>EYE DEBUG MODE (?debug=1)</span>
+            EYE DEBUG MODE (?debug=1)
           </div>
-          <p style={{ margin: '0.25rem 0', opacity: 0.8, fontSize: '0.75rem' }}>
-            Orange handle = Move center
-            <br />
-            Green handle = Resize mask
-          </p>
+
+          <div style={{ marginBottom: '0.75rem' }}>
+            <label style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem' }}>
+              <span>Shared Iris Size:</span>
+              <b>{irisTuning.sizePercent}%</b>
+            </label>
+            <input
+              type="range"
+              min="40"
+              max="70"
+              step="1"
+              value={irisTuning.sizePercent}
+              onChange={(e) =>
+                setIrisTuning((p) => ({ ...p, sizePercent: parseFloat(e.target.value) }))
+              }
+              style={{ width: '100%' }}
+            />
+          </div>
+
+          <div style={{ marginBottom: '0.75rem' }}>
+            <label style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem' }}>
+              <span>Nose Offset (Convergence):</span>
+              <b>{irisTuning.noseOffsetPercent}%</b>
+            </label>
+            <input
+              type="range"
+              min="0"
+              max="20"
+              step="0.5"
+              value={irisTuning.noseOffsetPercent}
+              onChange={(e) =>
+                setIrisTuning((p) => ({ ...p, noseOffsetPercent: parseFloat(e.target.value) }))
+              }
+              style={{ width: '100%' }}
+            />
+          </div>
+
+          <div style={{ marginBottom: '0.75rem' }}>
+            <label style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem' }}>
+              <span>Vertical Offset (Tuck):</span>
+              <b>{irisTuning.verticalOffsetPercent}%</b>
+            </label>
+            <input
+              type="range"
+              min="-10"
+              max="15"
+              step="0.5"
+              value={irisTuning.verticalOffsetPercent}
+              onChange={(e) =>
+                setIrisTuning((p) => ({ ...p, verticalOffsetPercent: parseFloat(e.target.value) }))
+              }
+              style={{ width: '100%' }}
+            />
+          </div>
+
           <pre
             style={{
               background: '#F0EEEB',
               padding: '0.5rem',
               borderRadius: '6px',
               overflow: 'auto',
-              maxHeight: '180px',
-              marginTop: '0.5rem',
+              maxHeight: '120px',
+              fontSize: '0.72rem',
             }}
           >
-            {JSON.stringify(config, null, 2)}
+            {JSON.stringify({ ...boxes, iris: irisTuning }, null, 2)}
           </pre>
+
           <button
             onClick={() => {
-              console.log('FINAL EYE_CONFIG:\n', JSON.stringify(config, null, 2));
-              navigator.clipboard?.writeText(JSON.stringify(config, null, 2));
+              const fullConfig = { ...boxes, iris: irisTuning };
+              console.log('FINAL EYE_CONFIG:\n', JSON.stringify(fullConfig, null, 2));
+              navigator.clipboard?.writeText(JSON.stringify(fullConfig, null, 2));
               alert('Config logged to console and copied to clipboard!');
             }}
             style={{
-              marginTop: '0.75rem',
+              marginTop: '0.5rem',
               width: '100%',
               padding: '0.5rem',
               background: '#DC6341',
