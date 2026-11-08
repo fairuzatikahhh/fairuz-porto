@@ -1,12 +1,12 @@
 import { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import Eyes from './Eyes';
-import { EYE_CONFIG } from '../config';
+import { EYE_CONFIG, THEME } from '../config';
 
 export default function Hero() {
   const bustRef = useRef<HTMLDivElement>(null);
 
-  // Subtle head parallax on base.png (max 4px translate, 1.5deg rotate)
+  // Subtle head parallax on base.png (max 4px translate, 1.2deg rotate)
   const quickBustX = useRef<((v: number) => void) | null>(null);
   const quickBustY = useRef<((v: number) => void) | null>(null);
   const quickBustRot = useRef<((v: number) => void) | null>(null);
@@ -40,9 +40,18 @@ export default function Hero() {
       quickBustRot.current?.(targetRot);
     };
 
+    const handleMouseLeave = () => {
+      quickBustX.current?.(0);
+      quickBustY.current?.(0);
+      quickBustRot.current?.(0);
+    };
+
     window.addEventListener('mousemove', handleMouseMove, { passive: true });
+    document.addEventListener('mouseleave', handleMouseLeave);
+
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseleave', handleMouseLeave);
     };
   }, []);
 
@@ -52,9 +61,8 @@ export default function Hero() {
         position: 'relative',
         width: '100vw',
         height: '100vh',
-        background: '#16151C',
-        color: '#F5F0EE',
-        fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        background: THEME.pageBg,
+        color: THEME.text,
         overflow: 'hidden',
         userSelect: 'none',
       }}
@@ -63,37 +71,41 @@ export default function Hero() {
       <header
         style={{
           position: 'absolute',
-          top: 0,
+          top: '3.2vh',
           left: 0,
           right: 0,
-          height: '5.5rem',
-          padding: '0 clamp(1.5rem, 5vw, 4.5rem)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          zIndex: 20,
+          padding: '0 3vw',
+          zIndex: 30,
         }}
       >
-        {/* Faiz Logo in Coral */}
+        {/* Logo: Faiz at left (3vw, ~2.7vw font-size, regular weight, #DC6341) */}
         <a
           href="#"
           style={{
-            color: '#FF7A59',
-            fontSize: '1.75rem',
-            fontWeight: 700,
-            letterSpacing: '-0.02em',
+            color: THEME.logoCoral,
+            fontFamily: "'Montserrat', sans-serif",
+            fontSize: 'clamp(1.8rem, 2.7vw, 2.5rem)',
+            fontWeight: 400,
             textDecoration: 'none',
+            lineHeight: 1,
+            letterSpacing: '-0.01em',
           }}
         >
           Faiz
         </a>
 
-        {/* Middle Navigation Links */}
+        {/* Links: Home, About, Project, Contact centered on the page (~1.35vw, weight 500, #212121, ~4.5vw gaps) */}
         <nav
           style={{
+            position: 'absolute',
+            left: '50%',
+            transform: 'translateX(-50%)',
             display: 'flex',
             alignItems: 'center',
-            gap: 'clamp(1.2rem, 3vw, 2.75rem)',
+            gap: 'clamp(1.5rem, 4.5vw, 4rem)',
           }}
         >
           {['Home', 'About', 'Project', 'Contact'].map((item) => (
@@ -101,21 +113,18 @@ export default function Hero() {
               key={item}
               href={`#${item.toLowerCase()}`}
               style={{
-                color: '#F5F0EE',
-                fontSize: '0.95rem',
-                fontWeight: 400,
-                letterSpacing: '0.02em',
+                fontFamily: "'Montserrat', sans-serif",
+                color: THEME.text,
+                fontSize: 'clamp(0.85rem, 1.35vw, 1.15rem)',
+                fontWeight: 500,
                 textDecoration: 'none',
-                opacity: item === 'Home' ? 1 : 0.7,
-                transition: 'opacity 0.2s, color 0.2s',
+                transition: 'color 0.2s ease',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.opacity = '1';
-                e.currentTarget.style.color = '#FF7A59';
+                e.currentTarget.style.color = THEME.logoCoral;
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.opacity = item === 'Home' ? '1' : '0.7';
-                e.currentTarget.style.color = '#F5F0EE';
+                e.currentTarget.style.color = THEME.text;
               }}
             >
               {item}
@@ -123,59 +132,64 @@ export default function Hero() {
           ))}
         </nav>
 
-        {/* Coral Pill Button: Lets Contact */}
+        {/* Pill Button: Lets Contact + arrow-up-right icon, height ~6vh, horizontal padding ~2.3vw */}
         <a
           href="#contact"
           style={{
             display: 'inline-flex',
             alignItems: 'center',
-            gap: '0.6rem',
-            background: '#FF7A59',
-            color: '#16151C',
-            fontSize: '0.9rem',
-            fontWeight: 600,
-            letterSpacing: '0.01em',
-            padding: '0.65rem 1.35rem',
+            gap: '0.55vw',
+            background: THEME.buttonBg,
+            color: THEME.buttonText,
+            fontFamily: "'Montserrat', sans-serif",
+            fontSize: 'clamp(0.85rem, 1.25vw, 1.1rem)',
+            fontWeight: 500,
+            height: 'clamp(2.4rem, 6vh, 3.4rem)',
+            padding: '0 clamp(1.2rem, 2.3vw, 2.2rem)',
             borderRadius: '9999px',
             textDecoration: 'none',
-            transition: 'transform 0.2s, background-color 0.2s, box-shadow 0.2s',
-            boxShadow: '0 4px 18px rgba(255, 122, 89, 0.25)',
+            boxShadow: '0 2px 12px rgba(220, 99, 65, 0.2)',
+            transition: 'transform 0.2s, box-shadow 0.2s',
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'translateY(-1px) scale(1.02)';
-            e.currentTarget.style.boxShadow = '0 6px 22px rgba(255, 122, 89, 0.4)';
+            e.currentTarget.style.transform = 'translateY(-1px)';
+            e.currentTarget.style.boxShadow = '0 4px 18px rgba(220, 99, 65, 0.35)';
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.transform = 'none';
-            e.currentTarget.style.boxShadow = '0 4px 18px rgba(255, 122, 89, 0.25)';
+            e.currentTarget.style.boxShadow = '0 2px 12px rgba(220, 99, 65, 0.2)';
           }}
         >
           <span>Lets Contact</span>
+          {/* Arrow-up-right icon (NOT a right arrow) */}
           <svg
             width="14"
             height="14"
             viewBox="0 0 16 16"
             fill="none"
-            stroke="currentColor"
-            strokeWidth="2.2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
+            style={{ width: 'clamp(10px, 1.1vw, 15px)', height: 'clamp(10px, 1.1vw, 15px)' }}
           >
-            <path d="M3 8h10M9 4l4 4-4 4" />
+            <path
+              d="M4.5 11.5L11.5 4.5M11.5 4.5H6.5M11.5 4.5V9.5"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
           </svg>
         </a>
       </header>
 
-      {/* ─── Bust with Responsive Eyes & Parallax (Centered-Right) ──────── */}
+      {/* ─── Character: base.png CENTERED horizontally, anchored to BOTTOM edge (bottom: 0) ─── */}
       <div
         style={{
           position: 'absolute',
-          top: '52%',
-          right: 'clamp(3%, 10vw, 15%)',
-          transform: 'translateY(-50%)',
-          height: 'clamp(460px, 78vh, 820px)',
+          bottom: 0,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: 'clamp(320px, 40.23vw, 560px)',
           aspectRatio: '1790 / 2400',
-          zIndex: 5,
+          zIndex: 10,
           pointerEvents: 'none',
         }}
       >
@@ -201,30 +215,31 @@ export default function Hero() {
             }}
           />
 
-          {/* Interactive Eyes Overlaid at percentage coordinates */}
+          {/* Interactive Eyes Overlaid at detected sclera coordinates */}
           <Eyes containerRef={bustRef} />
         </div>
       </div>
 
-      {/* ─── Bottom-Left: Big Name Text (Two Lines, Light Uppercase) ──── */}
+      {/* ─── Bottom-Left: Big Name FAIRUZ / ATIKAH (two lines, ~7.3vw, line-height 1.08) ─── */}
       <div
         style={{
           position: 'absolute',
-          bottom: 'clamp(2rem, 5vw, 4.5rem)',
-          left: 'clamp(1.5rem, 5vw, 4.5rem)',
-          zIndex: 10,
+          left: '3.3vw',
+          bottom: 'clamp(1.5rem, 2vh, 2.5rem)',
+          zIndex: 20,
           pointerEvents: 'none',
         }}
       >
         <h1
           style={{
             margin: 0,
-            fontSize: 'clamp(3.5rem, 7.5vw, 8.5rem)',
-            fontWeight: 200,
-            lineHeight: 0.9,
-            letterSpacing: '-0.03em',
+            fontFamily: "'Montserrat', sans-serif",
+            fontSize: 'clamp(3.8rem, 7.3vw, 7.2rem)',
+            fontWeight: 450,
+            lineHeight: 1.08,
+            letterSpacing: '-0.02em',
             textTransform: 'uppercase',
-            color: '#F5F0EE',
+            color: THEME.text,
           }}
         >
           FAIRUZ
@@ -233,31 +248,34 @@ export default function Hero() {
         </h1>
       </div>
 
-      {/* ─── Bottom-Right: Small Description ───────────────────────────── */}
+      {/* ─── Bottom-Right: Description (Inter ~1.8vw, line-height 1.65, #000000, left-aligned) ─── */}
       <div
         style={{
           position: 'absolute',
-          bottom: 'clamp(2rem, 5vw, 4.5rem)',
-          right: 'clamp(1.5rem, 5vw, 4.5rem)',
-          maxWidth: '310px',
-          zIndex: 10,
-          textAlign: 'right',
+          right: '3vw',
+          bottom: 'clamp(1.5rem, 2vh, 2.5rem)',
+          width: 'clamp(240px, 26vw, 360px)',
+          zIndex: 20,
+          textAlign: 'left',
           pointerEvents: 'none',
         }}
       >
         <p
           style={{
             margin: 0,
-            fontSize: 'clamp(0.85rem, 1.1vw, 1rem)',
-            fontWeight: 300,
-            lineHeight: 1.55,
-            color: '#F5F0EE',
-            opacity: 0.78,
-            letterSpacing: '0.01em',
+            fontFamily: "'Inter', sans-serif",
+            fontSize: 'clamp(0.95rem, 1.8vw, 1.65rem)',
+            fontWeight: 400,
+            lineHeight: 1.65,
+            color: THEME.descriptionText,
+            letterSpacing: '-0.01em',
           }}
         >
-          I blend design thinking with visual storytelling to help brands
-          communicate better
+          I blend design thinking with
+          <br />
+          visual storytelling to help
+          <br />
+          brands communicate better
         </p>
       </div>
     </div>

@@ -1,15 +1,18 @@
-// ─── Stage 1 & 2 Configuration ───────────────────────────────────────────────
+// ─── Theme & Layout Configuration ─────────────────────────────────────────────
+export const THEME = {
+  pageBg: '#DAD8D6',         // Flat light grey-beige page background (matches Framer)
+  text: '#212121',           // Primary dark text (Montserrat)
+  descriptionText: '#000000', // Bottom-right description text (Inter)
+  logoCoral: '#DC6341',      // Faiz logo coral
+  buttonBg: '#EE8162',       // Lets Contact pill button coral
+  buttonText: '#FFFFFF',     // White button text
+};
 
-/** Video duration in seconds (fallback / reference; runtime reads video.duration). */
+// ─── Loader configuration ───────────────────────────────────────────────────
 export const VIDEO_DURATION = 5.8;
-
-/** How long to hold at 100% before fading out (seconds). */
 export const HOLD_DURATION = 0.6;
-
-/** Delay before the "Skip" button appears (seconds). */
 export const SKIP_DELAY = 1.0;
 
-/** Loader counter styling parameters */
 export const LOADER_COUNTER_STYLES = {
   fontSize: 'clamp(7rem, 16vw, 18rem)',
   fontWeight: 300,
@@ -20,46 +23,41 @@ export const LOADER_COUNTER_STYLES = {
   zIndex: 20,
 };
 
-// ─── Eye Tracking & Parallax Configuration (in percentages of base.png) ─────────
+// ─── Eye Tracking & Parallax Configuration ────────────────────────────────────
+// Programmatically measured from near-white sclera connected components in base.png (1790x2400)
 export interface EyeParams {
   cx: number;         // Center X (% of base.png width)
   cy: number;         // Center Y (% of base.png height)
   maskWidth: number;  // Mask width (% of base.png width)
   maskHeight: number; // Mask height (% of base.png height)
-  irisWidth: number;  // Iris width (% of base.png width)
-  irisHeight: number; // Iris height (% of base.png height)
-  rotate?: number;    // Slight mask rotation angle in degrees
+  rotate: number;     // Tilt angle in degrees
 }
 
 export const EYE_CONFIG = {
   leftEye: {
-    cx: 41.5,
-    cy: 31.8,
-    maskWidth: 7.2,
-    maskHeight: 4.0,
-    irisWidth: 6.8,
-    irisHeight: 6.8,
-    rotate: -3,
+    cx: 39.58,
+    cy: 32.10,
+    maskWidth: 8.04,
+    maskHeight: 4.04,
+    rotate: -3.5,
   } as EyeParams,
 
   rightEye: {
-    cx: 60.5,
-    cy: 31.8,
-    maskWidth: 7.2,
-    maskHeight: 4.0,
-    irisWidth: 6.8,
-    irisHeight: 6.8,
-    rotate: 3,
+    cx: 61.59,
+    cy: 31.88,
+    maskWidth: 8.10,
+    maskHeight: 4.67,
+    rotate: 3.5,
   } as EyeParams,
 
   movement: {
-    maxX: 6, // max horizontal iris travel (px)
-    maxY: 4, // max vertical iris travel (px)
+    maxX: 5.5, // max horizontal iris travel (px)
+    maxY: 3.5, // max vertical iris travel (px)
   },
 
   parallax: {
     maxTranslate: 4, // max head parallax translate (px)
-    maxRotate: 1.5,  // max head parallax rotation (deg)
+    maxRotate: 1.2,  // max head parallax rotation (deg)
   },
 };
 

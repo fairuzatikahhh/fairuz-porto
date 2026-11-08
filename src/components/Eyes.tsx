@@ -36,6 +36,14 @@ export default function Eyes({ containerRef }: EyesProps) {
   useEffect(() => {
     if (!leftIrisRef.current || !rightIrisRef.current) return;
 
+    // Set initial centered rest state (pointer at 0, 0)
+    gsap.set([leftIrisRef.current, rightIrisRef.current], {
+      xPercent: -50,
+      yPercent: -50,
+      x: 0,
+      y: 0,
+    });
+
     quickLeftX.current = gsap.quickTo(leftIrisRef.current, 'x', {
       duration: 0.35,
       ease: 'power2.out',
@@ -53,6 +61,19 @@ export default function Eyes({ containerRef }: EyesProps) {
       ease: 'power2.out',
     });
 
+    // Check test parameters (e.g. ?eyeTest=left or ?eyeTest=right)
+    const params = new URLSearchParams(window.location.search);
+    const test = params.get('eyeTest');
+    if (test === 'left') {
+      gsap.set([leftIrisRef.current, rightIrisRef.current], { x: -EYE_CONFIG.movement.maxX });
+      quickLeftX.current?.(-EYE_CONFIG.movement.maxX);
+      quickRightX.current?.(-EYE_CONFIG.movement.maxX);
+    } else if (test === 'right') {
+      gsap.set([leftIrisRef.current, rightIrisRef.current], { x: EYE_CONFIG.movement.maxX });
+      quickLeftX.current?.(EYE_CONFIG.movement.maxX);
+      quickRightX.current?.(EYE_CONFIG.movement.maxX);
+    }
+
     const handleMouseMove = (e: MouseEvent) => {
       // Normalize pointer to -1..1 over the window
       const normX = (e.clientX / window.innerWidth) * 2 - 1;
@@ -61,16 +82,27 @@ export default function Eyes({ containerRef }: EyesProps) {
       const targetX = normX * EYE_CONFIG.movement.maxX;
       const targetY = normY * EYE_CONFIG.movement.maxY;
 
-      // Both irises move together
+      // Both irises move together in the same direction
       quickLeftX.current?.(targetX);
       quickLeftY.current?.(targetY);
       quickRightX.current?.(targetX);
       quickRightY.current?.(targetY);
     };
 
+    // Ease back to center (0, 0) when mouse leaves window
+    const handleMouseLeave = () => {
+      quickLeftX.current?.(0);
+      quickLeftY.current?.(0);
+      quickRightX.current?.(0);
+      quickRightY.current?.(0);
+    };
+
     window.addEventListener('mousemove', handleMouseMove, { passive: true });
+    document.addEventListener('mouseleave', handleMouseLeave);
+
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseleave', handleMouseLeave);
     };
   }, []);
 
@@ -121,8 +153,6 @@ export default function Eyes({ containerRef }: EyesProps) {
         } else if (action === 'resize') {
           eye.maskWidth = Math.max(1, parseFloat((initialEye.maskWidth + deltaXPct).toFixed(2)));
           eye.maskHeight = Math.max(0.5, parseFloat((initialEye.maskHeight + deltaYPct).toFixed(2)));
-          eye.irisWidth = eye.maskWidth * 0.95;
-          eye.irisHeight = eye.maskWidth * 0.95;
         }
 
         const nextConfig = { ...prev, [eyeKey]: eye };
@@ -165,7 +195,7 @@ export default function Eyes({ containerRef }: EyesProps) {
           zIndex: 5,
         }}
       >
-        {/* Elliptical Mask matching the eye opening */}
+        {/* Elliptical Mask matching the sclera eye opening */}
         <div
           style={{
             position: 'absolute',
@@ -175,19 +205,23 @@ export default function Eyes({ containerRef }: EyesProps) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            border: debugMode ? '1.5px dashed #FF7A59' : 'none',
-            background: debugMode ? 'rgba(255, 122, 89, 0.15)' : 'transparent',
+            border: debugMode ? '1.5px dashed #DC6341' : 'none',
+            background: debugMode ? 'rgba(220, 99, 65, 0.2)' : 'transparent',
           }}
         >
-          {/* Iris element using eyes.png */}
+          {/* Iris element: size matches the height of the eye white */}
           <img
             ref={irisRef}
             src="/assets/eyes.png"
             alt={`${eyeKey} iris`}
             style={{
-              position: 'relative',
-              width: '120%',
-              height: '120%',
+              position: 'absolute',
+              left: '50%',
+              top: '50%',
+              // In eyes.png the colored iris is ~79% of the box, so 126% fills the eye white height
+              height: '126%',
+              width: 'auto',
+              aspectRatio: '1 / 1',
               objectFit: 'contain',
               pointerEvents: 'none',
               userSelect: 'none',
@@ -210,7 +244,7 @@ export default function Eyes({ containerRef }: EyesProps) {
                 width: 14,
                 height: 14,
                 transform: 'translate(-50%, -50%)',
-                background: '#FF7A59',
+                background: '#DC6341',
                 borderRadius: '50%',
                 border: '2px solid #FFFFFF',
                 cursor: 'grab',
@@ -250,24 +284,24 @@ export default function Eyes({ containerRef }: EyesProps) {
         <div
           style={{
             position: 'fixed',
-            top: '5rem',
+            top: '5.5rem',
             right: '2rem',
-            background: 'rgba(22, 21, 28, 0.95)',
-            border: '1px solid #FF7A59',
+            background: 'rgba(255, 255, 255, 0.95)',
+            border: '1px solid #DC6341',
             borderRadius: '12px',
             padding: '1.25rem',
             zIndex: 99999,
-            color: '#F5F0EE',
+            color: '#212121',
             fontFamily: 'monospace',
             fontSize: '0.8rem',
             maxWidth: '340px',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
             backdropFilter: 'blur(8px)',
           }}
         >
           <div
             style={{
-              color: '#FF7A59',
+              color: '#DC6341',
               fontWeight: 'bold',
               marginBottom: '0.5rem',
               display: 'flex',
@@ -283,7 +317,7 @@ export default function Eyes({ containerRef }: EyesProps) {
           </p>
           <pre
             style={{
-              background: '#0D0C10',
+              background: '#F0EEEB',
               padding: '0.5rem',
               borderRadius: '6px',
               overflow: 'auto',
@@ -303,8 +337,8 @@ export default function Eyes({ containerRef }: EyesProps) {
               marginTop: '0.75rem',
               width: '100%',
               padding: '0.5rem',
-              background: '#FF7A59',
-              color: '#16151C',
+              background: '#DC6341',
+              color: '#FFFFFF',
               border: 'none',
               borderRadius: '6px',
               fontWeight: 'bold',

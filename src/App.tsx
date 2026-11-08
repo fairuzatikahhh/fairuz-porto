@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback } from 'react';
 import Loader from './components/Loader';
 import Hero from './components/Hero';
+import { THEME } from './config';
 
 const LOADER_VISITED_KEY = 'portfolio_loader_visited';
 
@@ -37,7 +38,7 @@ export default function App() {
           height: '100vh',
           zIndex: 1,
           overflow: 'hidden',
-          background: '#16151C',
+          background: THEME.pageBg,
         }}
       >
         <Hero />

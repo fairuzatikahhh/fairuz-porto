@@ -5,6 +5,7 @@ import {
   SKIP_DELAY,
   VIDEO_DURATION,
   LOADER_COUNTER_STYLES,
+  THEME,
 } from '../config';
 import { preloadAssets } from '../preload';
 
@@ -184,7 +185,7 @@ export default function Loader({ onDone }: LoaderProps) {
         position: 'fixed',
         inset: 0,
         zIndex: 9999,
-        background: '#000000',
+        background: THEME.pageBg, // Continuous light background (#DAD8D6), no black flash
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -228,13 +229,13 @@ export default function Loader({ onDone }: LoaderProps) {
           ref={percentRef}
           style={{
             fontFamily:
-              'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+              "'Montserrat', system-ui, -apple-system, sans-serif",
             fontSize: LOADER_COUNTER_STYLES.fontSize,
             fontWeight: LOADER_COUNTER_STYLES.fontWeight,
             lineHeight: LOADER_COUNTER_STYLES.lineHeight,
             letterSpacing: LOADER_COUNTER_STYLES.letterSpacing,
             fontVariantNumeric: LOADER_COUNTER_STYLES.fontVariantNumeric as React.CSSProperties['fontVariantNumeric'],
-            color: 'rgba(255, 255, 255, 0.92)',
+            color: THEME.text,
             display: 'inline-block',
             textAlign: 'right',
             minWidth: '4ch', // Keeps width stable from 0% to 100% without jumping
@@ -252,29 +253,30 @@ export default function Loader({ onDone }: LoaderProps) {
             position: 'absolute',
             bottom: '2.5rem',
             left: '3rem',
-            background: 'transparent',
-            border: '1px solid rgba(255, 255, 255, 0.35)',
-            color: 'rgba(255, 255, 255, 0.65)',
+            background: 'rgba(255, 255, 255, 0.75)',
+            border: '1px solid rgba(33, 33, 33, 0.25)',
+            color: THEME.text,
             fontFamily:
-              'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-            fontWeight: 300,
+              "'Montserrat', system-ui, -apple-system, sans-serif",
+            fontWeight: 500,
             fontSize: '0.8rem',
-            letterSpacing: '0.12em',
+            letterSpacing: '0.1em',
             textTransform: 'uppercase',
-            padding: '0.5rem 1.25rem',
+            padding: '0.55rem 1.35rem',
             borderRadius: '999px',
             cursor: 'pointer',
             transition: 'all 0.2s ease',
             outline: 'none',
             zIndex: 30,
+            backdropFilter: 'blur(8px)',
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.8)';
-            e.currentTarget.style.color = 'rgba(255, 255, 255, 0.95)';
+            e.currentTarget.style.borderColor = 'rgba(33, 33, 33, 0.7)';
+            e.currentTarget.style.background = '#FFFFFF';
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.35)';
-            e.currentTarget.style.color = 'rgba(255, 255, 255, 0.65)';
+            e.currentTarget.style.borderColor = 'rgba(33, 33, 33, 0.25)';
+            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.75)';
           }}
         >
           Skip
