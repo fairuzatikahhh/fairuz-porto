@@ -1,5 +1,9 @@
 import { PRELOAD_IMAGES, PRELOAD_VIDEOS } from './config';
 
+// 4 aset baru untuk section SlideStory:
+// /assets/walker-stand.webp, /assets/walker-jump.webp, /assets/walker-sit.webp, /assets/slide-track.webp
+export { PRELOAD_IMAGES, PRELOAD_VIDEOS };
+
 /**
  * Preloads all assets defined in config in parallel.
  * Returns a promise that resolves when every asset is ready.

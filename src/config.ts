@@ -79,6 +79,10 @@ export const PRELOAD_IMAGES: string[] = [
   '/assets/left-eye-mask.png',
   '/assets/right-eye-mask.png',
   '/assets/slide-track-clean.png',
+  '/assets/walker-stand.webp',
+  '/assets/walker-jump.webp',
+  '/assets/walker-sit.webp',
+  '/assets/slide-track.webp',
 ];
 
 export const PRELOAD_VIDEOS: string[] = [];

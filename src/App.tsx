@@ -1,7 +1,6 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import Loader from './components/Loader';
-import Hero from './components/Hero';
-import { THEME } from './config';
+import SlideStory from './components/SlideStory';
 
 const LOADER_VISITED_KEY = 'portfolio_loader_visited';
 
@@ -17,7 +16,23 @@ function shouldShowLoader(): boolean {
 
 export default function App() {
   const [loaderVisible, setLoaderVisible] = useState(() => shouldShowLoader());
-  const heroRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (loaderVisible) {
+      window.scrollTo(0, 0);
+      const prevOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      const handleExit = () => {
+        document.body.style.overflow = prevOverflow;
+        window.scrollTo(0, 0);
+      };
+      window.addEventListener('loader:exit', handleExit, { once: true });
+      return () => {
+        document.body.style.overflow = prevOverflow;
+        window.removeEventListener('loader:exit', handleExit);
+      };
+    }
+  }, [loaderVisible]);
 
   const handleLoaderDone = useCallback(() => {
     sessionStorage.setItem(LOADER_VISITED_KEY, '1');
@@ -29,24 +44,7 @@ export default function App() {
 
   return (
     <>
-      {/* Hero is mounted BEHIND the loader (never display: none).
-          It is always fully visible (opacity: 1) sitting at z-index 1.
-          When the loader (z-index: 9999) fades its opacity to 0,
-          the hero is revealed seamlessly with zero lag or freeze. */}
-      <div
-        ref={heroRef}
-        style={{
-          position: 'fixed',
-          inset: 0,
-          width: '100vw',
-          height: '100vh',
-          zIndex: 1,
-          overflow: 'hidden',
-          background: THEME.pageBg,
-        }}
-      >
-        <Hero />
-      </div>
+      <SlideStory />
 
       {/* Full-screen Loader sits on top until complete */}
       {loaderVisible && <Loader onDone={handleLoaderDone} />}
