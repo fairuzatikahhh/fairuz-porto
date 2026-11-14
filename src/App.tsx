@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import Loader from './components/Loader';
 import SlideStory from './components/SlideStory';
+import { initSmoothScroll } from './smoothScroll';
 
 const LOADER_VISITED_KEY = 'portfolio_loader_visited';
 
@@ -17,18 +18,28 @@ function shouldShowLoader(): boolean {
 export default function App() {
   const [loaderVisible, setLoaderVisible] = useState(() => shouldShowLoader());
 
+  // smooth scroll (Lenis) untuk seluruh halaman
+  useEffect(() => {
+    initSmoothScroll();
+  }, []);
+
   useEffect(() => {
     if (loaderVisible) {
       window.scrollTo(0, 0);
+      const lenis = initSmoothScroll();
+      lenis?.stop(); // jangan scroll selama loader tampil
       const prevOverflow = document.body.style.overflow;
       document.body.style.overflow = 'hidden';
       const handleExit = () => {
         document.body.style.overflow = prevOverflow;
         window.scrollTo(0, 0);
+        lenis?.scrollTo(0, { immediate: true });
+        lenis?.start();
       };
       window.addEventListener('loader:exit', handleExit, { once: true });
       return () => {
         document.body.style.overflow = prevOverflow;
+        lenis?.start();
         window.removeEventListener('loader:exit', handleExit);
       };
     }

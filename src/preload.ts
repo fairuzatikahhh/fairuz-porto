@@ -1,7 +1,6 @@
 import { PRELOAD_IMAGES, PRELOAD_VIDEOS } from './config';
 
-// 4 aset baru untuk section SlideStory:
-// /assets/walker-stand.webp, /assets/walker-jump.webp, /assets/walker-sit.webp, /assets/slide-track.webp
+// Aset hero: bust + frame karakter (lihat config.ts)
 export { PRELOAD_IMAGES, PRELOAD_VIDEOS };
 
 /**

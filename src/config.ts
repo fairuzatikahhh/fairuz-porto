@@ -1,3 +1,5 @@
+import { FRAME_URLS } from './components/frames';
+
 // ─── Theme & Layout Configuration ─────────────────────────────────────────────
 export const THEME = {
   pageBg: '#DAD8D6',         // Flat light grey-beige page background (matches Framer)
@@ -78,11 +80,7 @@ export const PRELOAD_IMAGES: string[] = [
   '/assets/eyes.png',
   '/assets/left-eye-mask.png',
   '/assets/right-eye-mask.png',
-  '/assets/slide-track-clean.png',
-  '/assets/walker-stand.webp',
-  '/assets/walker-jump.webp',
-  '/assets/walker-sit.webp',
-  '/assets/slide-track.webp',
+  ...FRAME_URLS, // frame karakter hero (wave, turn, walk)
 ];
 
 export const PRELOAD_VIDEOS: string[] = [];

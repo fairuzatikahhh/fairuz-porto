@@ -291,6 +291,7 @@ export default function Hero() {
 
       {/* ─── Bottom-Left: Big Name FAIRUZ / ATIKAH (two lines, ~7.3vw, line-height 1.08) ─── */}
       <div
+        data-hero="name"
         style={{
           position: 'absolute',
           left: '3.3vw',
@@ -326,6 +327,7 @@ export default function Hero() {
 
       {/* ─── Bottom-Right: Description (Inter ~1.8vw, line-height 1.65, #000000, left-aligned) ─── */}
       <div
+        data-hero="desc"
         style={{
           position: 'absolute',
           right: '3vw',

@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# bahan kerja karakter (video mentah, rekaman layar, frame kerja) — hasil akhirnya ada di public/assets/frames
+/frames/
+
+# pengaturan lokal Claude Code
+/.claude/
