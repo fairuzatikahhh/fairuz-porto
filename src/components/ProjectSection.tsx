@@ -35,9 +35,9 @@ const PROJECTS = [
     img: '/assets/projects/compro-tries.webp',
   },
   {
-    name: 'Jannah',
-    desc: 'A mobile app designed to support daily worship and guide users through structured Hajj journeys.',
-    img: '/assets/projects/jannah.webp',
+    name: 'Clandys Virtual Member',
+    desc: 'A virtual membership app for a retail store, where customers shop and transact through the app while collecting reward points.',
+    img: '/assets/projects/clandys.webp',
   },
 ];
 
