@@ -1,10 +1,24 @@
-import { useLayoutEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
-import { THEME } from '../config';
+import { DESKTOP_MQ, THEME } from '../config';
+
+const LINKS = [['Home', '#'], ['About', '#about'], ['Project', '#project'], ['Contact', '#contact']] as const;
 
 // Navbar global (position: fixed) → tetap terlihat di semua section (Hero, story, Project).
 export default function Navbar() {
   const ref = useRef<HTMLElement>(null);
+  const [open, setOpen] = useState(false); // menu HP
+
+  // tutup menu HP saat layar dilebarkan atau tombol Escape
+  useEffect(() => {
+    if (!open) return;
+    const mq = window.matchMedia(DESKTOP_MQ);
+    const close = () => setOpen(false);
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') close(); };
+    mq.addEventListener('change', close);
+    window.addEventListener('keydown', onKey);
+    return () => { mq.removeEventListener('change', close); window.removeEventListener('keydown', onKey); };
+  }, [open]);
 
   // animasi masuk sama seperti dulu di Hero (0.3s delay + 0.45s offset setelah loader keluar)
   useLayoutEffect(() => {
@@ -58,6 +72,7 @@ export default function Navbar() {
 
       {/* Links: Home, About, Project, Contact centered on the page (~1.35vw, weight 500, #212121, ~4.5vw gaps) */}
       <nav
+        className="nav-links"
         style={{
           position: 'absolute',
           left: '50%',
@@ -68,10 +83,17 @@ export default function Navbar() {
           pointerEvents: 'auto',
         }}
       >
-        {['Home', 'About', 'Project', 'Contact'].map((item) => (
+        {LINKS.map(([item, href]) => (
           <a
             key={item}
-            href={`#${item.toLowerCase()}`}
+            href={href}
+            onClick={(e) => {
+              // di desktop perkenalan ada di dalam animasi scroll → lompat ke titiknya
+              if (href === '#about' && window.matchMedia(DESKTOP_MQ).matches) {
+                e.preventDefault();
+                document.getElementById('about-desktop')?.scrollIntoView();
+              }
+            }}
             style={{
               fontFamily: "'Montserrat', sans-serif",
               color: THEME.text,
@@ -95,6 +117,7 @@ export default function Navbar() {
       {/* Pill Button: Lets Contact + arrow-up-right icon, height ~6vh, horizontal padding ~2.3vw */}
       <a
         href="#contact"
+        className="nav-cta"
         style={{
           display: 'inline-flex',
           alignItems: 'center',
@@ -139,6 +162,30 @@ export default function Navbar() {
           />
         </svg>
       </a>
+
+      {/* HP: tombol menu (hamburger) + panel tautan */}
+      <button
+        type="button"
+        className="nav-burger"
+        aria-label={open ? 'Tutup menu' : 'Buka menu'}
+        aria-expanded={open}
+        aria-controls="mobile-menu"
+        onClick={() => setOpen((o) => !o)}
+      >
+        <span style={{ transform: open ? 'translateY(4px) rotate(45deg)' : 'none' }} />
+        <span style={{ transform: open ? 'translateY(-4px) rotate(-45deg)' : 'none' }} />
+      </button>
+      <nav id="mobile-menu" className={`nav-menu${open ? ' is-open' : ''}`} aria-hidden={!open}>
+        {LINKS.map(([item, href]) => (
+          <a key={item} href={href} tabIndex={open ? 0 : -1} onClick={() => setOpen(false)}>{item}</a>
+        ))}
+        <a href="#contact" className="nav-menu-cta" tabIndex={open ? 0 : -1} onClick={() => setOpen(false)}>
+          Lets Contact
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M4.5 11.5L11.5 4.5M11.5 4.5H6.5M11.5 4.5V9.5" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </a>
+      </nav>
     </header>
   );
 }

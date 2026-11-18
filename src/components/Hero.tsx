@@ -127,6 +127,7 @@ export default function Hero() {
 
       {/* ─── Character: base.png CENTERED horizontally, anchored to BOTTOM edge (bottom: 0) ─── */}
       <div
+        className="hero-char"
         style={{
           position: 'absolute',
           bottom: 0,
@@ -173,6 +174,7 @@ export default function Hero() {
       {/* ─── Bottom-Left: Big Name FAIRUZ / ATIKAH (two lines, ~7.3vw, line-height 1.08) ─── */}
       <div
         data-hero="name"
+        className="hero-name"
         style={{
           position: 'absolute',
           left: '3.3vw',
@@ -182,6 +184,7 @@ export default function Hero() {
         }}
       >
         <h1
+          className="hero-name-h1"
           style={{
             margin: 0,
             fontFamily: "'Montserrat', sans-serif",
@@ -209,6 +212,7 @@ export default function Hero() {
       {/* ─── Bottom-Right: Description (Inter ~1.8vw, line-height 1.65, #000000, left-aligned) ─── */}
       <div
         data-hero="desc"
+        className="hero-desc"
         style={{
           position: 'absolute',
           right: '3vw',
@@ -221,6 +225,7 @@ export default function Hero() {
       >
         <p
           data-reveal="desc"
+          className="hero-desc-p"
           style={{
             margin: 0,
             fontFamily: "'Inter', sans-serif",

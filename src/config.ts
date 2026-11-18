@@ -84,3 +84,12 @@ export const PRELOAD_IMAGES: string[] = [
 ];
 
 export const PRELOAD_VIDEOS: string[] = [];
+
+// ─── Responsif ──────────────────────────────────────────────────────────────
+// Pengalaman scroll penuh (SlideStory, galeri 3D Project) hanya di layar lebar & mendatar.
+// Selain itu (HP, tablet, layar portrait, atau pengguna yang memilih kurangi gerakan) memakai
+// tata letak mobile — lihat blok @media di index.css (harus kebalikan persis dari ini).
+export const DESKTOP_MQ = '(min-width: 900px) and (min-aspect-ratio: 1201/1000) and (prefers-reduced-motion: no-preference)';
+// Animasi scroll versi mobile (parallax ringan): kebalikan DESKTOP_MQ, kecuali pengguna "kurangi gerakan"
+export const MOBILE_ANIM_MQ =
+  '(max-width: 899px) and (prefers-reduced-motion: no-preference), (max-aspect-ratio: 6/5) and (prefers-reduced-motion: no-preference)';

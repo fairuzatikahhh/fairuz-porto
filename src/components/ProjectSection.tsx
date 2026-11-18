@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { THEME } from '../config';
+import { DESKTOP_MQ, MOBILE_ANIM_MQ, THEME } from '../config';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -75,7 +75,6 @@ function fitCardWidth(W: number) {
   return lo;
 }
 
-const MIN_WIDTH = 900;
 const SCROLL_LENGTH = '+=160%'; // panjang scroll section (kartu menyebar, lalu diam sebentar)
 
 export default function ProjectSection() {
@@ -85,7 +84,7 @@ export default function ProjectSection() {
     const root = rootRef.current;
     if (!root) return;
     const mm = gsap.matchMedia();
-    mm.add(`(min-width: ${MIN_WIDTH}px) and (prefers-reduced-motion: no-preference)`, () => {
+    mm.add(DESKTOP_MQ, () => {
       const cards = gsap.utils.toArray<HTMLElement>('[data-project-card]', root);
       const char = root.querySelector<HTMLElement>('[data-project-char]');
       const charWrap = root.querySelector<HTMLElement>('[data-project-charwrap]');
@@ -158,6 +157,75 @@ export default function ProjectSection() {
       root.addEventListener('mouseleave', onLeave);
       return () => { root.removeEventListener('mousemove', onMove); root.removeEventListener('mouseleave', onLeave); };
     });
+
+    // ── Mobile: section dipin, scroll ke bawah menggeser deretan kartu ke samping ──
+    // kartu sedikit berputar & mengecil saat menjauh dari tengah; karakter menoleh mengikuti
+    mm.add(MOBILE_ANIM_MQ, () => {
+      root.classList.add('is-hscroll');
+      const stage = root.querySelector<HTMLElement>('[data-project-stage]')!;
+      const cards = gsap.utils.toArray<HTMLElement>('[data-project-card]', root);
+      const lean = root.querySelector<HTMLElement>('[data-char-lean]');
+      const breathe = root.querySelector<HTMLElement>('[data-char-breathe]');
+      const sway = root.querySelector<HTMLElement>('[data-char-sway]');
+      gsap.to(breathe, { scaleY: 1.012, scaleX: 0.996, transformOrigin: '50% 100%', duration: 1.8, ease: 'sine.inOut', yoyo: true, repeat: -1 });
+      gsap.fromTo(sway, { rotation: -0.7 }, { rotation: 0.7, transformOrigin: '50% 100%', duration: 2.6, ease: 'sine.inOut', yoyo: true, repeat: -1 });
+      // ukuran kartu: sebesar mungkin, tapi tepi bawahnya tetap di atas kepala karakter
+      const charImg = root.querySelector<HTMLElement>('[data-char-breathe]')!;
+      // layar pendek: ruang di bawah judul dibagi antara kartu & karakter (karakter boleh mengecil),
+      // kartu kecil → deskripsi disembunyikan supaya gambar proyek tetap terlihat
+      const sizeCards = () => {
+        root.style.removeProperty('--m-card');
+        root.style.removeProperty('--m-char');
+        const rr = root.getBoundingClientRect(), H = rr.height;
+        const cardTop = stage.getBoundingClientRect().top - rr.top + parseFloat(getComputedStyle(stage).paddingTop); // tanpa skala kartu
+        const room = H - cardTop - 18; // ruang untuk kartu + karakter yang terlihat
+        const max = Math.min(root.clientWidth * 0.78, 420);
+        let charH = charImg.offsetHeight;
+        let card = Math.min(max, room - charH * 0.97); // charwrap: bottom -3vh ≈ 3% gambar di bawah layar
+        if (card < max) {
+          card = Math.min(max, Math.max(room - charH * 0.97, room * 0.56));
+          charH = Math.max(0.2 * H, (room - card) / 0.97);
+          root.style.setProperty('--m-char', `${Math.round(charH)}px`);
+          card = Math.min(card, room - charH * 0.97);
+        }
+        root.style.setProperty('--m-card', `${Math.round(card)}px`);
+        root.classList.toggle('is-compact', card < 250);
+      };
+      sizeCards();
+      const dist = () => Math.max(0, stage.scrollWidth - root.clientWidth);
+      const tiltCards = () => {
+        const cx = root.clientWidth / 2;
+        cards.forEach((c) => {
+          const r = c.getBoundingClientRect();
+          const d = (r.left + r.width / 2 - cx) / root.clientWidth; // -1 … 1
+          gsap.set(c, { rotationY: -d * 28, scale: 1 - Math.min(0.12, Math.abs(d) * 0.14), transformOrigin: '50% 50%' });
+        });
+      };
+      const tw = gsap.to(stage, {
+        x: () => -dist(), ease: 'none',
+        onUpdate() {
+          tiltCards();
+          const k = this.progress() - 0.5;
+          gsap.set(lean, { x: k * 36, rotation: k * 3, transformOrigin: '50% 100%' });
+        },
+        scrollTrigger: {
+          trigger: root, start: 'top top', end: () => `+=${dist() * 1.3}`, pin: true, scrub: 0.5,
+          invalidateOnRefresh: true, onRefreshInit: sizeCards, onRefresh: tiltCards,
+        },
+      });
+      tiltCards();
+      const titleTw = gsap.fromTo('[data-project-title]', { y: 40, opacity: 0 }, {
+        y: 0, opacity: 1, ease: 'none', scrollTrigger: { trigger: root, start: 'top 90%', end: 'top 30%', scrub: 0.5 },
+      });
+      return () => {
+        tw.scrollTrigger?.kill(); tw.kill();
+        titleTw.scrollTrigger?.kill(); titleTw.kill();
+        root.classList.remove('is-hscroll', 'is-compact');
+        root.style.removeProperty('--m-card');
+        root.style.removeProperty('--m-char');
+        gsap.set([stage, ...cards, lean, breathe, sway, '[data-project-title]'], { clearProps: 'transform,opacity' });
+      };
+    });
     return () => mm.revert();
   }, []);
 
@@ -165,16 +233,17 @@ export default function ProjectSection() {
     <section
       id="project"
       ref={rootRef}
+      className="project-section"
       style={{
         position: 'relative', width: '100vw', height: '100vh', overflow: 'hidden',
         background: THEME.pageBg, color: THEME.text, fontFamily: "'Inter', sans-serif",
       }}
     >
-      <div style={{ position: 'absolute', top: '7vh', left: 0, right: 0, display: 'flex', justifyContent: 'center', zIndex: 3 }}>{/* top diatur layout() */}
+      <div className="project-title-wrap" style={{ position: 'absolute', top: '7vh', left: 0, right: 0, display: 'flex', justifyContent: 'center', zIndex: 3 }}>{/* top diatur layout() */}
         <h2
           data-project-title
           style={{
-            width: 'min(90vw, 1200px)', margin: 0, textAlign: 'center', fontWeight: 400, lineHeight: 1.25,
+            width: 'min(90vw, 1560px)', margin: 0, textAlign: 'center', fontWeight: 400, lineHeight: 1.25,
             letterSpacing: '-0.01em', fontSize: 'clamp(1.2rem, min(2.3vw, 4.6vh), 2.4rem)',
           }}
         >
@@ -183,12 +252,13 @@ export default function ProjectSection() {
       </div>
 
       {/* panggung 3D: kamera sedikit dari atas (perspectiveOrigin tinggi) seperti referensi */}
-      <div data-project-persp style={{ position: 'absolute', inset: 0, perspective: `${RING.perspective}px`, perspectiveOrigin: '50% 20%' }}>
-        <div data-project-stage style={{ position: 'absolute', left: '50%', top: '20%', transformStyle: 'preserve-3d' }}>
+      <div data-project-persp className="project-persp" style={{ position: 'absolute', inset: 0, perspective: `${RING.perspective}px`, perspectiveOrigin: '50% 20%' }}>
+        <div data-project-stage className="project-stage" style={{ position: 'absolute', left: '50%', top: '20%', transformStyle: 'preserve-3d' }}>
           {PROJECTS.map((p) => (
             <article
               key={p.name}
               data-project-card
+              className="project-card"
               style={{
                 position: 'absolute', left: 0, top: 0, width: '18vw', height: '18vw', // ukuran pasti diatur layout()
                 transformStyle: 'preserve-3d', willChange: 'transform, opacity',
@@ -200,6 +270,7 @@ export default function ProjectSection() {
               {[0, 1].map((side) => (
                 <span
                   key={side}
+                  className="project-card-edge"
                   aria-hidden
                   style={{
                     position: 'absolute', top: 6, bottom: 6, width: RING.thick,
@@ -241,13 +312,14 @@ export default function ProjectSection() {
       </div>
 
       {/* karakter tampak belakang, di depan kartu */}
-      <div data-project-charwrap style={{ position: 'absolute', left: 0, right: 0, bottom: `${RING.charBottom * 100}vh`, display: 'flex', justifyContent: 'center', zIndex: 4, pointerEvents: 'none' }}>
+      <div data-project-charwrap className="project-charwrap" style={{ position: 'absolute', left: 0, right: 0, bottom: `${RING.charBottom * 100}vh`, display: 'flex', justifyContent: 'center', zIndex: 4, pointerEvents: 'none' }}>
         {/* lapisan: muncul saat scroll → condong ke kursor → goyang → napas */}
         <div data-project-char>
           <div data-char-lean>
             <div data-char-sway>
               <img
                 data-char-breathe
+                className="project-char-img"
                 src="/assets/char-back.webp"
                 alt=""
                 aria-hidden

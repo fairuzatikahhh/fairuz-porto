@@ -4,7 +4,9 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Hero from './Hero';
 import { FRAMES, type Eye, type Frame } from './frames';
 import { SLIDE_PATH, TRACK_SIZE } from './slidePath';
-import { THEME } from '../config';
+import { DESKTOP_MQ, MOBILE_ANIM_MQ, THEME } from '../config';
+import LiveChar from './LiveChar';
+import { INTRO, JOBS } from '../content';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -15,8 +17,14 @@ gsap.registerPlugin(ScrollTrigger);
    ════════════════════════════════════════════════════════════════════════════ */
 
 /* ─── PENGATURAN (semua angka yang mungkin ingin kamu ubah ada di sini) ─── */
-const MIN_WIDTH = 900;          // di bawah lebar ini animasi dimatikan (hanya Hero)
 const SCROLL_LENGTH = '+=1335%'; // total panjang scroll untuk seluruh cerita
+// Mobile: zoom-out bust → seluruh badan (karakter di bawah teks hero)
+const MOBILE_HERO = {
+  charH: 0.56,     // tinggi badan setelah zoom-out (× tinggi layar)
+  feetY: 0.985,    // posisi sol sepatu (× tinggi layar)
+  zoomEnd: 0.8,    // bagian scroll pin yang dipakai zoom (sisanya diam sejenak)
+  scroll: '+=110%',
+};
 const SCRUB = 0.35;             // kehalusan scrub (detik); inersia utama sudah dari Lenis (src/smoothScroll.ts)
 
 // Timeline dalam "unit waktu"; total = T.total. Ubah angka untuk mempercepat/memperlambat tiap fase.
@@ -95,40 +103,7 @@ const FWD_GROW = 1.38;
 const FWD_WALK_END = 0.9; // bagian yang berisi langkah kaki (sisanya sudah berdiri diam)
 const STILL_FROM = 0.92;  // mulai titik ini frame video memudar ke pose diam (gambar tajam)
 
-// Riwayat pekerjaan (urut terbaru). Satu titik carousel per perusahaan; data lain menyusul.
-// Satu entri = satu titik carousel (urut terbaru; sumber: fairuzatikah.com, bagian "My Journey").
-// `look`: karakter untuk perusahaan itu: 'tries' (lanyard hitam), 'genah' (lanyard biru langit),
-// 'plain' (tanpa lanyard).
-const JOBS = [
-  {
-    company: 'Tries Digital Indonesia',
-    role: 'UI/UX Designer',
-    period: '2025 – Now',
-    desc: 'I am designing and improving interface flows for digital products, focused on making user journeys clearer and easier.',
-    look: 'tries',
-  },
-  {
-    company: 'Tercode Indonesia',
-    role: 'UI/UX Designer',
-    period: '2024 – 2025',
-    desc: 'I built interface layouts and design systems for web products, and improved consistency across multiple screens.',
-    look: 'plain', // tanpa lanyard
-  },
-  {
-    company: 'Gawe Becik Nadhah Anugrah',
-    role: 'UI/UX Designer',
-    period: '2023 – 2024',
-    desc: 'I designed internal systems (CMS/HRIS) with complex user flows, and simplified their structure to reduce user confusion.',
-    look: 'genah', // lanyard biru langit & kartu putih
-  },
-  {
-    company: 'Telkom Indonesia',
-    role: 'UI/UX Designer Intern',
-    period: '2023',
-    desc: 'I assisted in designing UI components and layouts, and learned real-world product design workflows and collaboration.',
-    look: 'plain', // tanpa lanyard
-  },
-];
+// Riwayat pekerjaan (JOBS) & teks perkenalan (INTRO): lihat src/content.ts
 // pindah perusahaan: karakter jalan keluar ke kanan, karakter berikutnya masuk dari kiri, teks berganti
 // (sementara memakai frame jalan dari hero — tanpa lanyard — sampai ada video jalan menyamping berlanyard)
 const SWITCH = {
@@ -137,15 +112,6 @@ const SWITCH = {
   backEnd: 16,   // SEQ.back[0..16]: berbalik sampai hampir menghadap depan, tangan masih di bawah
 };
 
-// Teks perkenalan (muncul di kanan setelah perosotan hilang)
-const INTRO = {
-  title: 'I design digital experiences that feel clear, useful, and human.',
-  body: [
-    "Hi, I'm Faiz — a UI/UX Designer who enjoys simplifying complex ideas into clear, usable experiences.",
-    'I started by questioning why some apps feel confusing, and that curiosity led me into design. Since then, I\'ve been focusing on improving user flows, especially in dashboards, CMS, and systems with complex structures.',
-    "For me, good design isn't just about visuals — it's about helping users move faster, think less, and avoid frustration.",
-  ],
-};
 
 // Mata hidup: kilau di iris + kedip otomatis (berdasarkan waktu, tetap jalan saat scroll berhenti)
 const EYES = {
@@ -345,7 +311,7 @@ export default function SlideStory() {
 
     const mm = gsap.matchMedia();
     mm.add(
-      `(min-width: ${MIN_WIDTH}px) and (prefers-reduced-motion: no-preference)`,
+      DESKTOP_MQ, // selain ini: hanya Hero (konten lain lewat MobileStory)
       () => {
         const q = <T extends HTMLElement>(s: string) => stage.querySelector<T>(s)!;
 
@@ -957,6 +923,65 @@ export default function SlideStory() {
       }
     );
 
+    // ── Mobile: zoom-out bust → seluruh badan (sama seperti awal versi desktop), lalu lanjut scroll ──
+    mm.add(MOBILE_ANIM_MQ, () => {
+      const q = <T extends HTMLElement>(s: string) => stage.querySelector<T>(s)!;
+      const bustInner = q('[data-reveal="character"]');
+      const bustWrap = bustInner.parentElement as HTMLElement;
+      const full = q('[data-mobile-full]');
+      const heroName = q('[data-hero="name"]');
+      const heroDesc = q('[data-hero="desc"]');
+      let g = { bustEye: { x: 0, y: 0 }, bustOrigin: '0px 0px', eyeF: { x: 0, y: 0 }, s0: 1, H: 1 };
+      const measure = () => {
+        const W = stage.clientWidth, H = stage.clientHeight;
+        const sr = stage.getBoundingClientRect();
+        const box = bustWrap.getBoundingClientRect();
+        const bw = box.width, bh = box.height || (bw * BUST.h) / BUST.w;
+        const ex = (BUST.eye[0] / BUST.w) * bw, ey = (BUST.eye[1] / BUST.h) * bh;
+        const Hf = MOBILE_HERO.charH * H, k = Hf / S.h, wF = S.w * k;
+        const left = W / 2 - S.anchor[0] * k, top = MOBILE_HERO.feetY * H - Hf;
+        Object.assign(full.style, { left: `${left}px`, top: `${top}px`, width: `${wF}px`, height: `${Hf}px`,
+          transformOrigin: `${STAND_EYE.eye[0] * k}px ${STAND_EYE.eye[1] * k}px` });
+        const sMatch = (bw / BUST.w) * (BUST.eyeDist / STAND_EYE.eyeDist);
+        g = {
+          bustEye: { x: box.left - sr.left + ex, y: box.top - sr.top + ey },
+          bustOrigin: `${ex}px ${ey}px`,
+          eyeF: { x: left + STAND_EYE.eye[0] * k, y: top + STAND_EYE.eye[1] * k },
+          s0: sMatch / k,
+          H,
+        };
+      };
+      const render = (p: number) => {
+        const kRaw = clamp01(p / MOBILE_HERO.zoomEnd), kz = E.out3(kRaw);
+        const scale = g.s0 * Math.pow(1 / g.s0, kz);
+        const ex = lerp(g.bustEye.x, g.eyeF.x, kz), ey = lerp(g.bustEye.y, g.eyeF.y, kz);
+        gsap.set(full, { x: ex - g.eyeF.x, y: ey - g.eyeF.y, scale, opacity: clamp01(p / 0.02) });
+        gsap.set(bustInner, { transformOrigin: g.bustOrigin, x: ex - g.bustEye.x, y: ey - g.bustEye.y, scale: scale / g.s0 });
+        bustWrap.style.opacity = String(1 - seg(kRaw, [0.02, 0.225]));
+        // teks hero: parallax pelan ke atas
+        gsap.set([heroName, heroDesc], { y: -0.025 * g.H * E.inOut2(p) });
+      };
+      measure();
+      render(0);
+      const proxy = { p: 0 };
+      const tw = gsap.to(proxy, {
+        p: 1, ease: 'none', onUpdate: () => render(proxy.p),
+        scrollTrigger: {
+          trigger: stage, start: 'top top', end: MOBILE_HERO.scroll, pin: true, scrub: SCRUB,
+          invalidateOnRefresh: true, onRefresh: (st) => { measure(); proxy.p = st.progress; render(proxy.p); },
+        },
+      });
+      return () => {
+        tw.scrollTrigger?.kill();
+        tw.kill();
+        gsap.set([heroName, heroDesc], { clearProps: 'y' });
+        gsap.set(bustInner, { x: 0, y: 0, scale: 1 });
+        gsap.set(full, { clearProps: 'x,y,scale,transform' });
+        full.style.opacity = '0';
+        bustWrap.style.opacity = '';
+      };
+    });
+
     return () => mm.revert();
   }, []);
 
@@ -966,6 +991,11 @@ export default function SlideStory() {
       style={{ position: 'relative', width: '100vw', height: '100vh', overflow: 'hidden' }}
     >
       <Hero />
+
+      {/* Mobile: pose seluruh badan (hidup: kedip & napas) untuk zoom-out; di desktop tersembunyi */}
+      <div data-mobile-full className="mobile-only" style={{ position: 'absolute', left: 0, top: 0, zIndex: 9, pointerEvents: 'none', opacity: 0 }}>
+        <LiveChar frame={S} height="100%" />
+      </div>
 
       {/* Perosotan: muncul saat karakter menunduk, digeser kamera saat ia meluncur (di bawah karakter) */}
       <img

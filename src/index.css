@@ -25,3 +25,121 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* ═══════════════════════ Responsif ═══════════════════════
+   Layar lebar & mendatar (DESKTOP_MQ di config.ts): pengalaman scroll penuh (SlideStory, galeri 3D Project).
+   Selain itu (< 900px, portrait / rasio ≤ 6:5, atau kurangi gerakan): tata letak mobile — navbar dengan menu, Hero disusun ulang,
+   perkenalan & riwayat pekerjaan versi mobile (MobileStory), kartu Project bisa digeser. */
+
+/* karakter "hidup" (LiveChar): napas & goyang halus dari kaki */
+.lc-sway { transform-origin: 50% 100%; animation: lc-sway 5.3s ease-in-out infinite alternate; }
+.lc-breathe { transform-origin: 50% 100%; animation: lc-breathe 1.8s ease-in-out infinite alternate; }
+@keyframes lc-sway { from { transform: rotate(-0.6deg); } to { transform: rotate(0.6deg); } }
+@keyframes lc-breathe { from { transform: scaleY(1); } to { transform: scaleY(1.012); } }
+@media (prefers-reduced-motion: reduce) { .lc-sway, .lc-breathe { animation: none; } }
+
+.mobile-only { display: none; }
+.nav-burger, .nav-menu { display: none; }
+
+@media (max-width: 899px), (max-aspect-ratio: 6/5), (prefers-reduced-motion: reduce) {
+  .mobile-only { display: block; }
+
+  /* ── Navbar ── */
+  header[data-reveal="header"] {
+    top: 0 !important;
+    padding: 14px 6vw !important;
+    background: rgba(218, 216, 214, 0.86);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+  }
+  .nav-links, .nav-cta { display: none !important; }
+  .nav-burger {
+    display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+    width: 44px; height: 44px; border: 0; border-radius: 9999px; cursor: pointer;
+    background: #EE8162; pointer-events: auto; box-shadow: 0 2px 12px rgba(220, 99, 65, 0.25);
+  }
+  .nav-burger span { display: block; width: 18px; height: 2px; border-radius: 1px; background: #fff; transition: transform 0.3s ease; }
+  .nav-menu {
+    display: flex; flex-direction: column; position: absolute; top: 100%; left: 4vw; right: 4vw; margin-top: 8px;
+    padding: 10px; border-radius: 20px; background: #F4F2F0; box-shadow: 0 18px 40px rgba(40, 30, 30, 0.16);
+    opacity: 0; transform: translateY(-8px); pointer-events: none; transition: opacity 0.25s ease, transform 0.25s ease;
+  }
+  .nav-menu.is-open { opacity: 1; transform: none; pointer-events: auto; }
+  .nav-menu a {
+    padding: 14px 14px; border-radius: 12px; text-decoration: none; color: #212121;
+    font-family: 'Montserrat', sans-serif; font-weight: 500; font-size: 1.05rem;
+  }
+  .nav-menu a:active { background: rgba(0, 0, 0, 0.05); }
+  .nav-menu .nav-menu-cta {
+    display: flex; align-items: center; justify-content: space-between; margin-top: 6px;
+    background: #EE8162; color: #fff;
+  }
+
+  /* ── Hero: nama & deskripsi di atas, karakter di bawah ── */
+  .hero-name { left: 6vw !important; right: 6vw; top: calc(70px + 3vh); bottom: auto !important; }
+  .hero-name-h1 { font-size: clamp(2.6rem, min(14vw, 9vh), 6rem) !important; }
+  .hero-desc {
+    left: 6vw; right: 6vw !important; width: auto !important; bottom: auto !important;
+    top: calc(70px + 3vh + 2.16 * clamp(2.6rem, min(14vw, 9vh), 6rem) + 1.6vh);
+  }
+  .hero-desc-p { font-size: clamp(0.95rem, min(4.2vw, 2.4vh), 1.3rem) !important; line-height: 1.55 !important; }
+  .hero-char { width: min(100vw, calc(58vh * 0.7458)) !important; }
+
+  /* ── Perkenalan & riwayat pekerjaan (MobileStory) ── */
+  .m-section { position: relative; padding: 13vh max(6vw, calc((100vw - 720px) / 2)) 8vh; background: #DAD8D6; color: #212121; font-family: 'Inter', sans-serif; overflow: hidden; }
+  .m-about { display: flex; flex-direction: column; align-items: center; gap: 4vh; }
+  .m-about .m-char { max-width: 100%; }
+  .m-text { width: 100%; max-width: 620px; }
+  .m-h2 { margin: 0 0 0.8em; font-size: clamp(1.55rem, 7vw, 2.6rem); font-weight: 400; line-height: 1.28; letter-spacing: -0.01em; }
+  .m-p { margin: 0 0 1em; font-size: clamp(0.98rem, 4vw, 1.15rem); line-height: 1.65; color: #000; }
+  .m-eyebrow { margin: 0 0 1.2em; color: #DC6341; font-size: 0.8rem; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; }
+  .m-work { min-height: 100vh; user-select: none; }
+  .m-work-stage { display: grid; grid-template-rows: 100%; justify-items: center; height: min(50vh, 108vw); margin: 3vh 0 2.4vh; }
+  .m-work-char { grid-area: 1 / 1; height: 100% !important; width: auto; max-width: 100%; transition: opacity 0.5s ease, transform 0.6s cubic-bezier(.2,.8,.2,1); }
+  .m-float { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
+  .m-work > :not(.m-float) { position: relative; z-index: 2; }
+  /* parallax aktif: section dipin setinggi layar, panggung karakter mengisi sisa ruang */
+  .m-work.is-pinned { height: 100vh; height: 100svh; min-height: 0; display: flex; flex-direction: column; padding-top: 11vh; padding-bottom: 4vh; }
+  .m-work.is-pinned .m-work-stage { flex: 1 1 auto; height: auto; min-height: 0; max-height: 56vh; }
+  .m-dots { display: flex; justify-content: center; gap: 10px; margin-bottom: 3vh; }
+  .m-dots button { height: 10px; border: 0; padding: 0; border-radius: 5px; cursor: pointer; transition: width 0.35s ease, background 0.35s ease; }
+  .m-swap { animation: m-swap-in 0.55s cubic-bezier(.2,.8,.2,1) both; }
+  @keyframes m-swap-in { from { opacity: 0; transform: translateX(calc(var(--dir, 1) * 28px)); } to { opacity: 1; transform: none; } }
+  .m-outline {
+    display: inline-flex; align-items: center; gap: 0.55em; margin-top: 0.6em; height: 2.9rem; padding: 0 1.5rem;
+    border: 1.5px solid #EE8162; border-radius: 9999px; color: #EE8162; text-decoration: none;
+    font-family: 'Montserrat', sans-serif; font-weight: 500; font-size: 0.95rem;
+  }
+
+  /* ── Project: judul, kartu yang bisa digeser, karakter tampak belakang ── */
+  .project-section { height: auto !important; padding-top: 13vh; }
+  .project-title-wrap { position: relative !important; top: auto !important; padding: 0 6vw; }
+  .project-title-wrap h2 { font-size: clamp(1.4rem, 6vw, 2.2rem) !important; }
+  .project-persp { position: relative !important; inset: auto !important; perspective: none !important; margin-top: 4vh; }
+  .project-stage {
+    position: relative !important; left: auto !important; top: auto !important; transform-style: flat !important;
+    display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 8px 6vw 44px;
+    scrollbar-width: none; -webkit-overflow-scrolling: touch;
+  }
+  .project-stage::-webkit-scrollbar { display: none; }
+  .project-card {
+    position: relative !important; flex: 0 0 auto; width: var(--m-card, min(78vw, 420px)) !important; height: var(--m-card, min(78vw, 420px)) !important;
+    scroll-snap-align: center; opacity: 1 !important;
+  }
+  .project-section:not(.is-hscroll) .project-card { transform: none !important; }
+  /* parallax aktif: section dipin setinggi layar, deretan kartu digeser oleh scroll (bukan swipe) */
+  .project-section.is-hscroll { height: 100vh !important; height: 100svh !important; }
+  .project-section.is-hscroll .project-persp { perspective: 900px !important; }
+  .project-section.is-hscroll .project-stage { overflow: visible; scroll-snap-type: none; width: max-content; transform-style: preserve-3d !important; }
+  .project-section.is-hscroll .project-charwrap { position: absolute !important; left: 0; right: 0; bottom: -3vh !important; margin: 0; }
+  .project-section.is-hscroll .project-char-img { height: var(--m-char, min(38vh, 92vw)) !important; margin: 0; }
+  .project-section.is-compact .project-card p { display: none !important; }
+  .project-section.is-compact .project-card h3 { font-size: 0.95rem !important; }
+  @media (max-height: 640px) { .project-section.is-hscroll .project-persp { margin-top: 2vh; } }
+  .project-card h3 { font-size: 1.05rem !important; }
+  .project-card p { font-size: 0.85rem !important; }
+  .project-card-edge { display: none; }
+  .project-card > div { box-shadow: 0 10px 22px rgba(60, 40, 40, 0.12), inset 0 0 0 1px rgba(0,0,0,0.04) !important; }
+  .project-charwrap { position: relative !important; bottom: auto !important; margin-top: 1vh; }
+  .project-char-img { height: min(44vh, 100vw) !important; margin-bottom: -4vh; }
+}

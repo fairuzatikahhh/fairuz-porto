@@ -3,6 +3,8 @@ import Loader from './components/Loader';
 import SlideStory from './components/SlideStory';
 import ProjectSection from './components/ProjectSection';
 import Navbar from './components/Navbar';
+import ContactSection from './components/ContactSection';
+import MobileStory from './components/MobileStory';
 import { initSmoothScroll } from './smoothScroll';
 
 const LOADER_VISITED_KEY = 'portfolio_loader_visited';
@@ -58,8 +60,14 @@ export default function App() {
   return (
     <>
       <Navbar />
-      <SlideStory />
+      {/* penanda "About" di desktop: titik scroll saat teks perkenalan tampil penuh (± 70% story) */}
+      <div style={{ position: 'relative' }}>
+        <SlideStory />
+        <span id="about-desktop" aria-hidden style={{ position: 'absolute', left: 0, top: 'calc(13.35 * 100vh * 0.7)', height: 1, width: 1 }} />
+      </div>
+      <MobileStory />
       <ProjectSection />
+      <ContactSection />
 
       {/* Full-screen Loader sits on top until complete */}
       {loaderVisible && <Loader onDone={handleLoaderDone} />}
