@@ -214,12 +214,68 @@ export default function ProjectSection() {
         },
       });
       tiltCards();
+
+      // geser kiri/kanan (jari atau mouse) juga menggerakkan deretan kartu: diterjemahkan ke posisi
+      // scroll di dalam rentang pin (scroll & kartu tetap sinkron), lalu berhenti di kartu terdekat
+      const st = tw.scrollTrigger!;
+      const scrollFor = (x: number) => st.start + (Math.min(dist(), Math.max(0, x)) / (dist() || 1)) * (st.end - st.start);
+      const cardX = (c: HTMLElement) => c.offsetLeft + c.offsetWidth / 2 - root.clientWidth / 2; // geseran supaya kartu di tengah
+      let snapTw: gsap.core.Tween | null = null;
+      const snapTo = (y: number) => {
+        const from = { y: window.scrollY };
+        snapTw = gsap.to(from, { y, duration: 0.55, ease: 'power3.out', onUpdate: () => window.scrollTo(0, from.y) });
+      };
+      let drag: { x: number; y: number; s: number; axis: '' | 'x' | 'y'; id: number } | null = null;
+      const onDown = (e: PointerEvent) => {
+        if (e.pointerType === 'mouse' && e.button !== 0) return;
+        snapTw?.kill();
+        drag = { x: e.clientX, y: e.clientY, s: window.scrollY, axis: '', id: e.pointerId };
+      };
+      const onMove = (e: PointerEvent) => {
+        if (!drag || e.pointerId !== drag.id) return;
+        const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+        if (!drag.axis) {
+          if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+          drag.axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+          if (drag.axis === 'x') stage.setPointerCapture(e.pointerId);
+        }
+        if (drag.axis !== 'x') return;
+        const ratio = (st.end - st.start) / (dist() || 1);
+        window.scrollTo(0, Math.min(st.end, Math.max(st.start, drag.s - dx * ratio)));
+      };
+      const onUp = (e: PointerEvent) => {
+        if (!drag || e.pointerId !== drag.id) return;
+        const d = drag;
+        drag = null;
+        if (d.axis !== 'x') return;
+        const dx = e.clientX - d.x;
+        // kartu yang paling dekat ke tengah; sentakan cepat → maju/mundur satu kartu
+        const nowX = (window.scrollY - st.start) / (st.end - st.start || 1) * dist();
+        const xs = cards.map(cardX);
+        let i = xs.reduce((best, x, k) => (Math.abs(x - nowX) < Math.abs(xs[best] - nowX) ? k : best), 0);
+        const startX = (d.s - st.start) / (st.end - st.start || 1) * dist();
+        const startI = xs.reduce((best, x, k) => (Math.abs(x - startX) < Math.abs(xs[best] - startX) ? k : best), 0);
+        if (i === startI && Math.abs(dx) > 40) i = Math.min(cards.length - 1, Math.max(0, startI + (dx < 0 ? 1 : -1)));
+        snapTo(scrollFor(xs[i]));
+      };
+      stage.style.touchAction = 'pan-y';
+      stage.addEventListener('pointerdown', onDown);
+      stage.addEventListener('pointermove', onMove);
+      stage.addEventListener('pointerup', onUp);
+      stage.addEventListener('pointercancel', onUp);
+      stage.addEventListener('dragstart', (e) => e.preventDefault());
+
       const titleTw = gsap.fromTo('[data-project-title]', { y: 40, opacity: 0 }, {
         y: 0, opacity: 1, ease: 'none', scrollTrigger: { trigger: root, start: 'top 90%', end: 'top 30%', scrub: 0.5 },
       });
       return () => {
         tw.scrollTrigger?.kill(); tw.kill();
         titleTw.scrollTrigger?.kill(); titleTw.kill();
+        stage.removeEventListener('pointerdown', onDown);
+        stage.removeEventListener('pointermove', onMove);
+        stage.removeEventListener('pointerup', onUp);
+        stage.removeEventListener('pointercancel', onUp);
+        stage.style.touchAction = '';
         root.classList.remove('is-hscroll', 'is-compact');
         root.style.removeProperty('--m-card');
         root.style.removeProperty('--m-char');
