@@ -76,8 +76,8 @@ export const EYE_CONFIG = {
 
 // ─── Asset Preload List ──────────────────────────────────────────────────────
 export const PRELOAD_IMAGES: string[] = [
-  '/assets/base-toned.png',
-  '/assets/eyes-lively.png?v=3', // naikkan v setiap iris dibuat ulang (hindari cache)
+  '/assets/base-toned.webp',
+  '/assets/eyes-lively.webp?v=3', // naikkan v setiap iris dibuat ulang (hindari cache)
   '/assets/left-eye-mask.png',
   '/assets/right-eye-mask.png',
   ...FRAME_URLS, // frame karakter hero (wave, turn, walk)

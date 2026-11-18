@@ -226,7 +226,7 @@ const sharedIrisBase =
           {/* Iris Element: diameter = 0.55 x eye-opening width */}
           <img
             ref={irisRef}
-            src="/assets/eyes-lively.png?v=3" /* warna & pupil disamakan dengan mata pose badan penuh: scripts/make-lively-iris.cjs */
+            src="/assets/eyes-lively.webp?v=3" /* warna & pupil disamakan dengan mata pose badan penuh: scripts/make-lively-iris.cjs */
             alt={`${eyeKey} iris`}
             style={{
               position: 'absolute',

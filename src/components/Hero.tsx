@@ -154,7 +154,7 @@ export default function Hero() {
           >
             {/* Base Character Bust */}
             <img
-              src="/assets/base-toned.png"
+              src="/assets/base-toned.webp"
               alt="Fairuz Atikah bust"
               style={{
                 width: '100%',
