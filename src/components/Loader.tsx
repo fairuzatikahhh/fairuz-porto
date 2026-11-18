@@ -209,8 +209,8 @@ export default function Loader({ onDone }: LoaderProps) {
       {/* Video: Centered, muted, playsInline, preload="auto", plays once and holds last frame */}
       <video
         ref={videoRef}
-        src="/assets/Loader.mp4"
-        poster="/assets/Loader.mp4#t=0.001"
+        src="/assets/Loader.mp4?v=2"
+        poster="/assets/Loader.mp4?v=2#t=0.001"
         muted
         playsInline
         preload="auto"
