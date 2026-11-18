@@ -83,12 +83,6 @@ export default function Hero() {
           { y: 40, opacity: 0 },
           { y: 0, opacity: 1, duration: 1.1, ease: 'power3.out' },
           0.3
-        )
-        .fromTo(
-          '[data-reveal="header"]',
-          { y: -30, opacity: 0 },
-          { y: 0, opacity: 1, duration: 1, ease: 'power3.out' },
-          0.45
         );
 
       handleLoaderExit = () => {
@@ -130,119 +124,6 @@ export default function Hero() {
         userSelect: 'none',
       }}
     >
-      {/* ─── Top Navigation ──────────────────────────────────────────────── */}
-      <header
-        data-reveal="header"
-        style={{
-          position: 'absolute',
-          top: '3.2vh',
-          left: 0,
-          right: 0,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '0 3vw',
-          zIndex: 30,
-        }}
-      >
-        {/* Logo: Faiz at left (3vw, ~2.7vw font-size, regular weight, #DC6341) */}
-        <a
-          href="#"
-          style={{
-            color: THEME.logoCoral,
-            fontFamily: "'Montserrat', sans-serif",
-            fontSize: 'clamp(1.8rem, 2.7vw, 2.5rem)',
-            fontWeight: 400,
-            textDecoration: 'none',
-            lineHeight: 1,
-            letterSpacing: '-0.01em',
-          }}
-        >
-          Faiz
-        </a>
-
-        {/* Links: Home, About, Project, Contact centered on the page (~1.35vw, weight 500, #212121, ~4.5vw gaps) */}
-        <nav
-          style={{
-            position: 'absolute',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 'clamp(1.5rem, 4.5vw, 4rem)',
-          }}
-        >
-          {['Home', 'About', 'Project', 'Contact'].map((item) => (
-            <a
-              key={item}
-              href={`#${item.toLowerCase()}`}
-              style={{
-                fontFamily: "'Montserrat', sans-serif",
-                color: THEME.text,
-                fontSize: 'clamp(0.85rem, 1.35vw, 1.15rem)',
-                fontWeight: 500,
-                textDecoration: 'none',
-                transition: 'color 0.2s ease',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = THEME.logoCoral;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = THEME.text;
-              }}
-            >
-              {item}
-            </a>
-          ))}
-        </nav>
-
-        {/* Pill Button: Lets Contact + arrow-up-right icon, height ~6vh, horizontal padding ~2.3vw */}
-        <a
-          href="#contact"
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '0.55vw',
-            background: THEME.buttonBg,
-            color: THEME.buttonText,
-            fontFamily: "'Montserrat', sans-serif",
-            fontSize: 'clamp(0.85rem, 1.25vw, 1.1rem)',
-            fontWeight: 500,
-            height: 'clamp(2.4rem, 6vh, 3.4rem)',
-            padding: '0 clamp(1.2rem, 2.3vw, 2.2rem)',
-            borderRadius: '9999px',
-            textDecoration: 'none',
-            boxShadow: '0 2px 12px rgba(220, 99, 65, 0.2)',
-            transition: 'transform 0.2s, box-shadow 0.2s',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'translateY(-1px)';
-            e.currentTarget.style.boxShadow = '0 4px 18px rgba(220, 99, 65, 0.35)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'none';
-            e.currentTarget.style.boxShadow = '0 2px 12px rgba(220, 99, 65, 0.2)';
-          }}
-        >
-          <span>Lets Contact</span>
-          {/* Arrow-up-right icon (NOT a right arrow) */}
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 16 16"
-            fill="none"
-            style={{ width: 'clamp(10px, 1.1vw, 15px)', height: 'clamp(10px, 1.1vw, 15px)' }}
-          >
-            <path
-              d="M4.5 11.5L11.5 4.5M11.5 4.5H6.5M11.5 4.5V9.5"
-              stroke="currentColor"
-              strokeWidth="2.2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </a>
-      </header>
 
       {/* ─── Character: base.png CENTERED horizontally, anchored to BOTTOM edge (bottom: 0) ─── */}
       <div
@@ -272,7 +153,7 @@ export default function Hero() {
           >
             {/* Base Character Bust */}
             <img
-              src="/assets/base.png"
+              src="/assets/base-toned.png"
               alt="Fairuz Atikah bust"
               style={{
                 width: '100%',

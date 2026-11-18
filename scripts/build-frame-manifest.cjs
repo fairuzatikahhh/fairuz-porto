@@ -19,7 +19,7 @@ const OUT_TS = path.join(ROOT, 'src/components/frames.ts');
 
 // grup → daftar file sumber (urutan = urutan frame)
 const GROUPS = {
-  stand: ['public/assets/walker-stand.webp'],
+  stand: ['frames/s1-stand/s1-stand-01.webp'], // pose badan penuh setelah zoom-out (gambar Gemini, ditajamkan)
   wave: [1, 2, 3, 4, 5].map((i) => `frames/s1-wave/s1-wave-0${i}.webp`),
   // satu video utuh (process-video.cjs → frames/s2-full-video): depan → berbalik ke kanan →
   // jalan di tempat → berbalik ke depan. Dipotong per bagian di SlideStory (FULL_CUT).
@@ -27,11 +27,37 @@ const GROUPS = {
   full: fs.readdirSync(path.join(ROOT, 'frames/s2-full-video')).filter((f) => f.endsWith('.webp'))
     .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
     .map((f) => `frames/s2-full-video/${f}`),
+  // perosotan (process-video.cjs, warna & posisi disambung ke frame sebelumnya):
+  // duduk (melihat ke bawah → duduk), meluncur (loop), berdiri (turun → berdiri menghadap depan)
+  sit: videoFrames('frames/s3-sit-video', { every: 2, last: 90 }),   // 91–143 = duduk diam, tidak perlu
+  slide: videoFrames('frames/s3-slide-video', { every: 2 }),
+  rise: videoFrames('frames/s3-stand-video'),                      // bangun dari perosotan (48 frame, sudah selang satu)
+  // melayang turun dengan payung ke section riwayat pekerjaan
+  float: videoFrames('frames/s4-float-video', { every: 2 }),
+  // mengeluarkan & membuka payung (diproses dengan skala & posisi SAMA dengan s4-float → nyambung)
+  open: videoFrames('frames/s4-open-video', { every: 2 }),
+  // berdiri dengan lanyard Tries (gambar diam; napas & kedip dibuat di web)
+  work: ['frames/s4-work/s4-work-01.webp'],
+  // berjalan maju mendekat (ukuran membesar alami dari video; titik acuan per frame = kaki)
+  fwd: videoFrames('frames/s4-fwd-video'), // 48 frame (selang satu, ditajamkan Real-ESRGAN): sampai berhenti tegak, tangan di samping
+  // pose diam di section pekerjaan (gambar Gemini, ditajamkan; kartu ditempel fix-video-cards.cjs)
+  tries: ['frames/s4-tries/s4-tries-01.webp'],  // gambar Genah, tali diwarnai hitam, kartu Tries asli
+  genah: ['frames/s4-genah/s4-genah-01.webp'],  // gambar Gemini sendiri (tali biru langit), kartu putih asli
+  // tanpa lanyard (Tercode, Telkom): gambar Gemini dari pose akhir Tries, lanyard dihapus
+  plain: ['frames/s4-plain/s4-plain-01.webp'],
 };
 
-const { applyTone, despillAll, restoreSkirt } = require('./lib/greenkey.cjs');
+// frame video (urut angka), opsional diambil tiap N frame / sampai frame ke-`last` (hemat ukuran)
+function videoFrames(dir, { every = 1, last = Infinity } = {}) {
+  return fs.readdirSync(path.join(ROOT, dir)).filter((f) => f.endsWith('.webp'))
+    .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
+    .filter((_, i) => i < last && i % every === 0)
+    .map((f) => `${dir}/${f}`);
+}
+
+const { applyTone, despillAll, restoreSkirt, toLab } = require('./lib/greenkey.cjs');
 // rok di walker-stand (dan frame turunannya) sisi kirinya pucat → warnai lagi (baris px rok)
-const SKIRT_ROWS = { stand: [1045, 1922], wave: [1045, 1922] }; // pinggang → ujung rok (di atas sepatu)
+const SKIRT_ROWS = { wave: [1045, 1922] }; // pinggang → ujung rok (di atas sepatu)
 const { detectEyes } = require('./lib/eyes.cjs');
 const TONE_FILE = path.join(__dirname, 'tone.json');
 const TONE = fs.existsSync(TONE_FILE) ? JSON.parse(fs.readFileSync(TONE_FILE, 'utf8')).groups : {};
@@ -39,7 +65,30 @@ const TONE = fs.existsSync(TONE_FILE) ? JSON.parse(fs.readFileSync(TONE_FILE, 'u
 // grup yang posisinya sudah benar dari sumbernya (video) → titik tumpu tetap
 // 'first' = titik tumpu & ukuran mengikuti frame pertama (pose depan), supaya sambungan dengan
 // walker-stand pas; frame berikutnya bergerak relatif terhadapnya (gerak asli video tetap utuh)
-const FIXED_ANCHOR = { full: 'first' };
+const FIXED_ANCHOR = { full: 'first', sit: 'first', slide: 'group:sit', rise: 'group:sit', float: 'first', open: 'group:float' };
+// gambar dari Gemini: pupil sedikit lebih terang → batas inti hitam dilonggarkan
+const EYE_OPTS = { stand: { blackLum: 40 }, work: { blackLum: 34 }, plain: { blackLum: 40 }, tries: { blackLum: 40 }, genah: { blackLum: 40 } };
+// pose diam di section pekerjaan: posisi mata diukur manual (deteksi otomatis hanya menemukan 0–1
+// mata → kedip sebelah / tidak berkedip). Kunci = indeks frame dalam grup.
+const EYES_TRIES_END = [
+  { cx: 638.8, cy: 311, rx: 31, ry: 21, px: 640.3, py: 313.6, pr: 20.8, skin: [183, 133, 114] },
+  { cx: 760, cy: 309, rx: 31, ry: 21, px: 754.9, py: 309.2, pr: 20.8, skin: [217, 168, 152] },
+];
+const EYES_SET = {
+  fwd: { 47: EYES_TRIES_END },   // berdiri tegak dengan lanyard Tries
+  open: {                        // berdiri tegak tanpa lanyard (Tercode, Telkom)
+    13: [
+      { cx: 917, cy: 516, rx: 37, ry: 24, px: 925, py: 517, pr: 22, skin: [170, 134, 110] },
+      { cx: 1055, cy: 520, rx: 37, ry: 23, px: 1047, py: 522, pr: 22, skin: [211, 166, 153] },
+    ],
+  },
+};
+// mata yang tak lolos deteksi (bulu mata menyatu dengan iris) → diisi manual; ukuran = mata satunya
+const EYES_ADD = {
+  work: [{ cx: 562, cy: 273, rx: 44.5, ry: 30.3, px: 554.5, py: 273, pr: 30.3, skin: [214, 166, 147] }],
+};
+// tinggi badan (ujung hijab → sol sepatu) bila kotak frame memuat benda lain di atas kepala (payung)
+const FIXED_CH = { float: 1521, fwd: 1000 }; // fwd: tinggi badan di frame PERTAMA (lalu membesar)
 
 async function anchorOf(file) {
   const { data, info } = await sharp(file).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
@@ -68,9 +117,10 @@ async function anchorOf(file) {
       if (TONE[group]) applyTone(data, TONE[group]);
       if (SKIRT_ROWS[group]) restoreSkirt(data, info.width, ...SKIRT_ROWS[group]);
       await sharp(data, { raw: { width: info.width, height: info.height, channels: 4 } })
-        .webp({ quality: group === 'full' ? 78 : 88, alphaQuality: 90 }).toFile(path.join(OUT_DIR, name)); // frame video banyak → kompres sedikit lebih
+        .webp({ quality: ['full', 'sit', 'slide', 'rise', 'float', 'open', 'fwd'].includes(group) ? 78 : 88, alphaQuality: 90 }).toFile(path.join(OUT_DIR, name)); // frame video banyak → kompres sedikit lebih
       // posisi mata (untuk kilau mata & kedip di web)
-      const eyes = detectEyes(data, info.width, info.height);
+      const eyes = detectEyes(data, info.width, info.height, EYE_OPTS[group]);
+      if (EYES_ADD[group] && eyes.length < 2) eyes.push(...EYES_ADD[group].filter((e) => !eyes.some((d) => Math.abs(d.cx - e.cx) < e.rx)));
       if (eyes.length !== 2) console.warn(`  ! ${name}: ${eyes.length} mata terdeteksi`);
       // ?v=<sidik isi file>: kalau frame dibuat ulang, URL ikut berubah → browser tidak memakai
       // gambar lama dari cache (nama file sama, isi beda)
@@ -95,12 +145,31 @@ async function anchorOf(file) {
     // grup dari video: titik tumpu SAMA untuk semua frame, supaya goyangan & naik-turun badan
     // yang asli tetap terlihat (kalau per frame, gerak itu "dibatalkan")
     const mode = FIXED_ANCHOR[group];
+    if (!mode && FIXED_CH[group]) ch = FIXED_CH[group];
     if (mode) {
-      const ax = mode === 'first' ? list[0].anchor[0] : Math.round((list.reduce((s, f) => s + f.anchor[0], 0) / list.length) * 10) / 10;
-      const ay = Math.max(...list.map((f) => f.anchor[1]));
-      if (mode === 'first') ch = list[0].bh;
-      list.forEach((f) => { f.anchor = [ax, ay]; });
+      if (mode.startsWith('group:')) {
+        // kanvas & posisi sama persis dengan grup lain (video lanjutan yang diselaraskan ALIGN_TO)
+        const ref = out[mode.slice(6)][0];
+        ch = ref.ch;
+        list.forEach((f) => { f.anchor = [...ref.anchor]; });
+      } else {
+        const ax = mode === 'first' ? list[0].anchor[0] : Math.round((list.reduce((s, f) => s + f.anchor[0], 0) / list.length) * 10) / 10;
+        const ay = mode === 'first' ? list[0].anchor[1] : Math.max(...list.map((f) => f.anchor[1]));
+        if (mode === 'first') ch = FIXED_CH[group] ?? list[0].bh;
+        list.forEach((f) => { f.anchor = [ax, ay]; });
+      }
     }
+    for (const [i, eyes] of Object.entries(EYES_SET[group] ?? {})) if (list[i]) list[i].eyes = eyes;
+    // buang "mata" palsu (bayangan di hijab / tangan): harus di area kepala (≤17% tinggi badan dari
+    // atas) dan warna kelopak di atasnya harus kulit, bukan pink hijab → web tidak menggambar kilau
+    // & kedip di tempat yang salah
+    list.forEach((f) => {
+      const H = f.bh, top = f.anchor[1] - H; // tinggi karakter sebenarnya di frame ini
+      f.eyes = f.eyes.filter((e) => {
+        const [L, a, b] = toLab(...e.skin);
+        return e.cy < top + H * 0.17 && a > 5 && a < 32 && b > 10 && b < 36 && L > 45;
+      });
+    });
     out[group] = list.map(({ bh, ...f }) => ({ ...f, ch }));
     console.log('✓', group, list.length, 'frame,', list[0].w + '×' + list[0].h, 'ch', ch);
   }
@@ -111,7 +180,8 @@ async function anchorOf(file) {
     'export interface Eye { cx: number; cy: number; rx: number; ry: number; px: number; py: number; pr: number; skin: readonly [number, number, number] }\n' +
     'export interface Frame { src: string; w: number; h: number; anchor: readonly [number, number]; ch: number; eyes: readonly Eye[] }\n\n' +
     `export const FRAMES = ${JSON.stringify(out)} as const satisfies Record<string, readonly Frame[]>;\n\n` +
-    'export const FRAME_URLS: string[] = Object.values(FRAMES).flat().map((f) => f.src);\n';
+    '// dimuat di awal (loader): hanya frame hero; frame perosotan dimuat di latar belakang oleh canvas\n' +
+    "export const FRAME_URLS: string[] = [FRAMES.stand, FRAMES.wave, FRAMES.full].flat().map((f) => f.src);\n";
   fs.writeFileSync(OUT_TS, ts);
   console.log('→', path.relative(ROOT, OUT_TS));
 })();

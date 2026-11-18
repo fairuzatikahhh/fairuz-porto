@@ -37,7 +37,7 @@ export interface EyeBox {
 
 export const EYE_CONFIG = {
   // Target iris diameter ratio to eye-opening width (0.52 - 0.55 visual; ~0.65 CSS to fill mask opening)
-  irisToEyeWidth: 0.65,
+  irisToEyeWidth: 0.71, // disamakan dengan pose badan penuh (iris ±71% lebar mata); sebelumnya 0.65
 
   leftEye: {
     left: 34.972,
@@ -76,8 +76,8 @@ export const EYE_CONFIG = {
 
 // ─── Asset Preload List ──────────────────────────────────────────────────────
 export const PRELOAD_IMAGES: string[] = [
-  '/assets/base.png',
-  '/assets/eyes.png',
+  '/assets/base-toned.png',
+  '/assets/eyes-lively.png?v=3', // naikkan v setiap iris dibuat ulang (hindari cache)
   '/assets/left-eye-mask.png',
   '/assets/right-eye-mask.png',
   ...FRAME_URLS, // frame karakter hero (wave, turn, walk)

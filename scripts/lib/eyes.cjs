@@ -10,7 +10,7 @@
  *   px, py, pr       pusat & jari-jari iris (untuk kilau)
  *   skin [r,g,b]     warna kulit kelopak (di atas mata) untuk kelopak saat kedip
  */
-function detectEyes(data, W, H) {
+function detectEyes(data, W, H, { blackLum = 24 } = {}) { // blackLum: batas inti pupil hitam
   let y0 = H, y1 = 0;
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (data[(y * W + x) * 4 + 3] > 128) { if (y < y0) y0 = y; if (y > y1) y1 = y; }
   const ch = y1 - y0;
@@ -55,7 +55,7 @@ function detectEyes(data, W, H) {
     for (let y = Math.round(bl.cy - R); y <= bl.cy + R; y++) for (let x = Math.round(bl.cx - R); x <= bl.cx + R; x++) {
       if (x < 0 || y < 0 || x >= W || y >= H) continue;
       const p = P(x, y);
-      if (data[p + 3] > 250 && lum(p) < 24) black++;
+      if (data[p + 3] > 250 && lum(p) < blackLum) black++;
     }
     if (black < Math.max(6, bl.n * 0.04)) blobs.splice(k, 1);
   }

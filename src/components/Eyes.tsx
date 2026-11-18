@@ -168,7 +168,10 @@ export default function Eyes({ containerRef }: EyesProps) {
   }, [debugMode, containerRef]);
 
   // Iris diameter = irisRatio x eye-opening width (eyes.png is tightly cropped 1:1 to circular iris)
-  const irisWidthPercent = irisRatio * 100;
+  // satu ukuran iris untuk kedua mata (persen dari lebar base.png)
+const sharedIrisBase =
+  irisRatio * ((boxes.leftEye.width + boxes.rightEye.width) / 2);
+  // const irisWidthPercent = irisRatio * 100;
 
   const renderEye = (
     eyeKey: 'leftEye' | 'rightEye',
@@ -183,6 +186,7 @@ export default function Eyes({ containerRef }: EyesProps) {
       ? 50 + irisTuning.noseOffsetPercent
       : 50 - irisTuning.noseOffsetPercent;
     const restY = 50 + irisTuning.verticalOffsetPercent;
+    const irisWidthPercent = (sharedIrisBase / box.width) * 100;
 
     return (
       <div
@@ -203,8 +207,13 @@ export default function Eyes({ containerRef }: EyesProps) {
             position: 'absolute',
             inset: 0,
             overflow: 'hidden',
-            WebkitMaskImage: `url('${box.maskUrl}')`,
-            maskImage: `url('${box.maskUrl}')`,
+            WebkitMaskImage: 
+            // 'none',
+
+            `url('${box.maskUrl}')`,
+            maskImage: 
+            // 'none',
+            `url('${box.maskUrl}')`,
             WebkitMaskSize: '100% 100%',
             maskSize: '100% 100%',
             WebkitMaskRepeat: 'no-repeat',
@@ -217,13 +226,15 @@ export default function Eyes({ containerRef }: EyesProps) {
           {/* Iris Element: diameter = 0.55 x eye-opening width */}
           <img
             ref={irisRef}
-            src="/assets/eyes.png"
+            src="/assets/eyes-lively.png?v=3" /* warna & pupil disamakan dengan mata pose badan penuh: scripts/make-lively-iris.cjs */
             alt={`${eyeKey} iris`}
             style={{
               position: 'absolute',
               left: `${restX}%`,
               top: `${restY}%`,
-              width: `${irisWidthPercent}%`,
+              width: `${irisWidthPercent * 1.11}%`,
+clipPath: 'circle(45% at 50% 50%)',
+              // width: `${irisWidthPercent}%`,
               aspectRatio: '1 / 1',
               objectFit: 'contain',
               pointerEvents: 'none',

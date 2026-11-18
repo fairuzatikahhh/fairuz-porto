@@ -136,18 +136,40 @@ function measure(alpha, W, H, x0 = 0, x1 = W - 1, align = 'feet') {
  * Koreksi rona per bahan (dari scripts/tone.json): geser a* dan b* tiap piksel mengikuti titik
  * koreksi terdekat (bobot jarak terbalik di bidang a*-b*). Warna netral (krom < 4) tidak diubah.
  */
-function applyTone(rgba, anchors) {
+function applyTone(rgba, tone) {
+  const anchors = tone.filter((t) => t.ab);
+  const glob = (tone.find((t) => t.global) || {}).global; // saturasi & kontras seluruh badan
   const SIG2 = 36; // kehalusan transisi antar bahan
   for (let i = 0; i < rgba.length; i += 4) {
     if (!rgba[i + 3]) continue;
-    const [L, a, b] = toLab(rgba[i], rgba[i + 1], rgba[i + 2]);
-    let wa = 0, wb = 0, ws = 0;
-    for (const { ab, d } of anchors) {
+    let [L, a, b] = toLab(rgba[i], rgba[i + 1], rgba[i + 2]);
+    let wa = 0, wb = 0, ws = 0, wl = 0;
+    for (const { ab, d, L: Lm } of anchors) {
       const w = 1 / ((a - ab[0]) ** 2 + (b - ab[1]) ** 2 + SIG2);
       wa += w * d[0]; wb += w * d[1]; ws += w;
+      // kecerahan: median bahan → median acuan, jarak dari median diskalakan (kontras)
+      wl += w * (Lm ? Lm[1] + (L - Lm[0]) * Lm[2] : L);
     }
     const k = smooth(2, 8, Math.hypot(a, b)); // netral → 0
     let a2 = a + (wa / ws) * k, b2 = b + (wb / ws) * k;
+    // putih/abu (sepatu, gelas) ikut separuh supaya terang-gelapnya serasi
+    L = Math.min(100, Math.max(0, L + (wl / ws - L) * (0.5 + 0.5 * k)));
+    if (glob) {
+      a2 *= 1 + (glob.cs - 1) * k; b2 *= 1 + (glob.cs - 1) * k; // netral tidak diwarnai
+      if (glob.Lq) {
+        // kurva kecerahan (hanya piksel berwarna; hitam/putih netral tidak berubah)
+        const [qs, qt] = glob.Lq;
+        let Lm;
+        if (L <= qs[0]) Lm = L + (qt[0] - qs[0]) * smooth(qs[0] - 15, qs[0], L);
+        else if (L >= qs[qs.length - 1]) Lm = L + (qt[qt.length - 1] - qs[qs.length - 1]) * smooth(qs[qs.length - 1] + 8, qs[qs.length - 1], L);
+        else {
+          let j = 0; while (j < qs.length - 2 && L > qs[j + 1]) j++;
+          const t = (L - qs[j]) / (qs[j + 1] - qs[j] || 1);
+          Lm = qt[j] + (qt[j + 1] - qt[j]) * t;
+        }
+        L = Math.min(100, Math.max(0, L + (Lm - L) * k));
+      }
+    }
     // batasi rona kuning: warna terang yang tidak merah/pink (a* kecil) tapi lebih kuning dari
     // sweater di bust (b* ≈ 8) ditarik mendekati itu — cahaya kekuningan di rok/sweater render asli.
     // Kulit (a* > 9) & pink (a* > 12) tidak terkena.

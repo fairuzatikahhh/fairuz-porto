@@ -1,6 +1,8 @@
 import { useState, useCallback, useEffect } from 'react';
 import Loader from './components/Loader';
 import SlideStory from './components/SlideStory';
+import ProjectSection from './components/ProjectSection';
+import Navbar from './components/Navbar';
 import { initSmoothScroll } from './smoothScroll';
 
 const LOADER_VISITED_KEY = 'portfolio_loader_visited';
@@ -55,7 +57,9 @@ export default function App() {
 
   return (
     <>
+      <Navbar />
       <SlideStory />
+      <ProjectSection />
 
       {/* Full-screen Loader sits on top until complete */}
       {loaderVisible && <Loader onDone={handleLoaderDone} />}
