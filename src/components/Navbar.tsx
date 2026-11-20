@@ -1,8 +1,16 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { DESKTOP_MQ, THEME } from '../config';
+import { detailSlugFromPath } from '../projectDetails';
+import { scrollToHash } from '../scrollToHash';
 
-const LINKS = [['Home', '#'], ['About', '#about'], ['Project', '#project'], ['Contact', '#contact']] as const;
+// tombol "Lets Contact" di navbar langsung membuka email
+const CONTACT_MAIL = 'mailto:fairuzatikah21@gmail.com';
+
+// di halaman detail project, tautan mengarah kembali ke halaman utama
+const ON_HOME = !detailSlugFromPath();
+const P = ON_HOME ? '' : '/';
+const LINKS = [['Home', ON_HOME ? '#' : '/'], ['About', `${P}#about`], ['Project', `${P}#project`], ['Contact', `${P}#contact`]] as const;
 
 // Navbar global (position: fixed) → tetap terlihat di semua section (Hero, story, Project).
 export default function Navbar() {
@@ -40,6 +48,7 @@ export default function Navbar() {
     <header
       ref={ref}
       data-reveal="header"
+      className={ON_HOME ? undefined : 'nav-solid'}
       style={{
         position: 'fixed',
         top: '3.2vh',
@@ -55,7 +64,7 @@ export default function Navbar() {
     >
       {/* Logo: Faiz at left (3vw, ~2.7vw font-size, regular weight, #DC6341) */}
       <a
-        href="#"
+        href={ON_HOME ? '#' : '/'}
         style={{
           color: THEME.logoCoral,
           fontFamily: "'Montserrat', sans-serif",
@@ -89,9 +98,10 @@ export default function Navbar() {
             href={href}
             onClick={(e) => {
               // di desktop perkenalan ada di dalam animasi scroll → lompat ke titiknya
-              if (href === '#about' && window.matchMedia(DESKTOP_MQ).matches) {
+              // halaman utama: lompat ke section dengan memperhitungkan section yang di-pin
+              if (ON_HOME && href.startsWith('#') && scrollToHash(href)) {
                 e.preventDefault();
-                document.getElementById('about-desktop')?.scrollIntoView();
+                history.replaceState(null, '', href === '#' ? window.location.pathname : href);
               }
             }}
             style={{
@@ -116,7 +126,7 @@ export default function Navbar() {
 
       {/* Pill Button: Lets Contact + arrow-up-right icon, height ~6vh, horizontal padding ~2.3vw */}
       <a
-        href="#contact"
+        href={CONTACT_MAIL}
         className="nav-cta"
         style={{
           display: 'inline-flex',
@@ -177,9 +187,12 @@ export default function Navbar() {
       </button>
       <nav id="mobile-menu" className={`nav-menu${open ? ' is-open' : ''}`} aria-hidden={!open}>
         {LINKS.map(([item, href]) => (
-          <a key={item} href={href} tabIndex={open ? 0 : -1} onClick={() => setOpen(false)}>{item}</a>
+          <a key={item} href={href} tabIndex={open ? 0 : -1} onClick={(e) => {
+            setOpen(false);
+            if (ON_HOME && href.startsWith('#') && scrollToHash(href)) e.preventDefault();
+          }}>{item}</a>
         ))}
-        <a href="#contact" className="nav-menu-cta" tabIndex={open ? 0 : -1} onClick={() => setOpen(false)}>
+        <a href={CONTACT_MAIL} className="nav-menu-cta" tabIndex={open ? 0 : -1} onClick={() => setOpen(false)}>
           Lets Contact
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
             <path d="M4.5 11.5L11.5 4.5M11.5 4.5H6.5M11.5 4.5V9.5" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
