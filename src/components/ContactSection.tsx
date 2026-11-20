@@ -16,7 +16,7 @@ gsap.registerPlugin(ScrollTrigger);
 const CONTENT = {
   title: ['Got a complex problem?', "Let's simplify it together."],
   desc: "I'm always open to discussing product design work or partnership opportunities.",
-  email: 'fairuz.design22@gmail.com',
+  email: 'fairuzatikah21@gmail.com',
   socials: [
     { label: 'LinkedIn', href: 'https://www.linkedin.com/in/fairuzatikah/' },
     { label: 'Dribbble', href: 'https://dribbble.com/fairuz_atikah' },

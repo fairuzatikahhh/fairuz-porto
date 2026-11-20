@@ -39,6 +39,16 @@ body {
 @media (prefers-reduced-motion: reduce) { .lc-sway, .lc-breathe { animation: none; } }
 
 .mobile-only { display: none; }
+
+/* halaman detail: konten bergulir di bawah navbar → navbar diberi latar transparan buram */
+header.nav-solid {
+  top: 0 !important; padding-top: 3.2vh !important; padding-bottom: 1.6vh !important;
+  background: rgba(218, 216, 214, 0.82); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+}
+
+/* kartu project: seluruh kartu adalah tautan ke halaman detail */
+.project-card-link { position: absolute; inset: 0; z-index: 3; border-radius: 16px; cursor: pointer; }
+.project-card-link:focus-visible { outline: 2px solid #DC6341; outline-offset: 4px; }
 .nav-burger, .nav-menu { display: none; }
 
 @media (max-width: 899px), (max-aspect-ratio: 6/5), (prefers-reduced-motion: reduce) {
@@ -86,7 +96,7 @@ body {
   .hero-char { width: min(100vw, calc(58vh * 0.7458)) !important; }
 
   /* ── Perkenalan & riwayat pekerjaan (MobileStory) ── */
-  .m-section { position: relative; padding: 13vh max(6vw, calc((100vw - 720px) / 2)) 8vh; background: #DAD8D6; color: #212121; font-family: 'Inter', sans-serif; overflow: hidden; }
+  .m-section { position: relative; padding: 13vh 6vw 8vh; background: #DAD8D6; color: #212121; font-family: 'Inter', sans-serif; overflow: hidden; }
   .m-about { display: flex; flex-direction: column; align-items: center; gap: 4vh; }
   .m-about .m-char { max-width: 100%; }
   .m-text { width: 100%; max-width: 620px; }

@@ -15,26 +15,31 @@ const TITLE = 'Thoughtfully crafted interfaces built for real users and real wor
 
 const PROJECTS = [
   {
+    slug: 'buckstore',
     name: 'Buckstore',
     desc: 'A streetwear e-commerce concept designed to create a bold, clean, and immersive shopping experience.',
     img: '/assets/projects/buckstore.webp',
   },
   {
+    slug: 'rayspeed',
     name: 'Rayspeed Asia',
     desc: 'Designing a clearer and more efficient international package delivery experience for customers and operational workflows.',
     img: '/assets/projects/rayspeed.webp',
   },
   {
+    slug: 'nashir',
     name: 'Nashir',
     desc: 'A commerce platform built from scratch to simplify product sales, stock management, and business operations.',
     img: '/assets/projects/nashir.webp',
   },
   {
+    slug: 'tries',
     name: 'Company Profile Tries',
     desc: 'A well-crafted company profile that reflects the brand identity and communicates services clearly.',
     img: '/assets/projects/compro-tries.webp',
   },
   {
+    slug: 'clandys',
     name: 'Clandys Virtual Member',
     desc: 'A virtual membership app for a retail store, where customers shop and transact through the app while collecting reward points.',
     img: '/assets/projects/clandys.webp',
@@ -248,6 +253,7 @@ export default function ProjectSection() {
         const d = drag;
         drag = null;
         if (d.axis !== 'x') return;
+        draggedAt = performance.now(); // klik setelah geser bukan berarti membuka kartu
         const dx = e.clientX - d.x;
         // kartu yang paling dekat ke tengah; sentakan cepat → maju/mundur satu kartu
         const nowX = (window.scrollY - st.start) / (st.end - st.start || 1) * dist();
@@ -264,6 +270,11 @@ export default function ProjectSection() {
       stage.addEventListener('pointerup', onUp);
       stage.addEventListener('pointercancel', onUp);
       stage.addEventListener('dragstart', (e) => e.preventDefault());
+      let draggedAt = -1e9;
+      const onClickCapture = (e: MouseEvent) => {
+        if (performance.now() - draggedAt < 400) { e.preventDefault(); e.stopPropagation(); }
+      };
+      stage.addEventListener('click', onClickCapture, true);
 
       const titleTw = gsap.fromTo('[data-project-title]', { y: 40, opacity: 0 }, {
         y: 0, opacity: 1, ease: 'none', scrollTrigger: { trigger: root, start: 'top 90%', end: 'top 30%', scrub: 0.5 },
@@ -275,6 +286,7 @@ export default function ProjectSection() {
         stage.removeEventListener('pointermove', onMove);
         stage.removeEventListener('pointerup', onUp);
         stage.removeEventListener('pointercancel', onUp);
+        stage.removeEventListener('click', onClickCapture, true);
         stage.style.touchAction = '';
         root.classList.remove('is-hscroll', 'is-compact');
         root.style.removeProperty('--m-card');
@@ -337,6 +349,8 @@ export default function ProjectSection() {
                   }}
                 />
               ))}
+              {/* seluruh kartu bisa diklik → halaman detail project */}
+              <a href={`/project/${p.slug}`} className="project-card-link" aria-label={`View ${p.name} case study`} draggable={false} />
               {/* muka kartu */}
               <div
                 style={{
